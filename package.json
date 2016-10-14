@@ -1,0 +1,23 @@
+{
+  "name": "@omneagmbh/service-framework",
+  "version": "0.0.1",
+  "description": "Basic framework for developing distributed services. It handles messages, acknowledgment and errors",
+  "main": "lib/facade.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/omnea/service-framework.git"
+  },
+  "author": "Omnea GmbH <david.montes@gmail.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://gitlab.com/omnea/service-framework/issues"
+  },
+  "homepage": "https://gitlab.com/omnea/service-framework#README",
+  "dependencies": {
+    "amqplib": "^0.4.2",
+    "debug": "^2.2.0"
+  }
+}
