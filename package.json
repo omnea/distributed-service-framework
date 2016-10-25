@@ -18,6 +18,7 @@
   "homepage": "https://gitlab.com/omnea/service-framework#README",
   "dependencies": {
     "amqplib": "^0.4.2",
-    "debug": "^2.2.0"
+    "debug": "^2.2.0",
+    "node-uuid": "^1.4.7"
   }
 }
