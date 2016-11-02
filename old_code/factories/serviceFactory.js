@@ -6,8 +6,6 @@ module.exports = class ServiceFactory {
 
 		if(!config) config = {};
 
-		var config = require('../../config.json');
-
 		var Service = require('../patterns/service');
 		var Router = require('../utils/router');
 		var Connector = require('../connectors/amqp');
@@ -17,12 +15,9 @@ module.exports = class ServiceFactory {
 		var emitterFactory = new EmitterFactory();
 		var router = new Router();
 		var rpcPattern = new RPCPattern();
-
-		var _amqpConfig = Object.assign({}, config.amqp, amqpConfig);
-		var _serviceConfig = Object.assign({}, config.service, serviceConfig);
 		if(!name) name = config.name;
 		
-		var connector = new Connector(_amqpConfig);
+		var connector = new Connector(amqpConfig);
 
 		var internalInputMiddlewares = this._getInternalMiddlewares(config._internalInputMiddlewares);
 		var internalOutputMiddlewares = this._getInternalMiddlewares(config._internalOutputMiddlewares);
@@ -32,7 +27,7 @@ module.exports = class ServiceFactory {
 			emitterFactory,
 			router,
 			rpcPattern,
-			_serviceConfig,
+			serviceConfig,
 			name,
 			internalInputMiddlewares,
 			internalOutputMiddlewares
