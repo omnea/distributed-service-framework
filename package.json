@@ -4,7 +4,7 @@
   "description": "Basic framework for developing distributed services. It handles messages, acknowledgment and errors",
   "main": "lib/facade.js",
   "scripts": {
-    "test": "jasmine",
+    "test": "NODE_ENV=test ./node_modules/.bin/jasmine",
     "start-dev": "NODE_ENV=development DEBUG=Omnea:* node ./lib/app.js",
     "start-prod": "NODE_ENV=production DEBUG=*:error node ./lib/app.js"
   },
@@ -23,5 +23,8 @@
     "amqplib": "^0.4.2",
     "debug": "^2.2.0",
     "node-uuid": "^1.4.7"
+  },
+  "devDependencies": {
+    "jasmine": "^2.5.2"
   }
 }

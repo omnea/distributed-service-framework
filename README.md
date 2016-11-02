@@ -1,3 +1,21 @@
+# Dependencies
+
+ - `npm install jasmine -g`
+ - node > 6
+
+# Installation
+
+- Install dependencies
+- `npm install` in the folder
+
+# Testing
+
+- npm test
+
+# Notes:
+
+## The future structure of the messages. 
+
 ```
 
 {
