@@ -1,0 +1,38 @@
+{
+	"_internalInputMiddlewares": ["packetParser"],
+	"_internalOutputMiddlewares": [],
+	"name": "NO_NAMED_SERVICE",
+	"amqp": {
+		"url": "5.9.156.76",
+		"port": 5672,
+		"user": "test",
+		"pass": "test",
+		"heartbeat": 10
+	},
+	"service": {
+		"exchanges": {
+			"service": {
+				"type": "topic",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": "Error"
+				}
+			}
+		} ,
+		"queues": {
+			"service": {
+				"nameSufix": "_receive",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {
+						
+					}
+				}
+			}
+		}
+	}
+}

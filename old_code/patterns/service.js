@@ -112,7 +112,7 @@ module.exports = class Service {
 	_executeMiddlewares (value) {
 		var flow = Promise.resolve(value);
 
-		for (let middleware of myStringArray) {
+		for (let middleware of this.inputMiddlewares) {
 			flow = flow.then(middleware);
 		}
 
