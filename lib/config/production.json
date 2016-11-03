@@ -1,7 +1,4 @@
 {
-	"_internalInputMiddlewares": ["packetParser"],
-	"_internalOutputMiddlewares": [],
-	"name": "NO_NAMED_SERVICE",
 	"amqp": {
 		"url": "5.9.156.76",
 		"port": 5672,
@@ -10,6 +7,9 @@
 		"heartbeat": 10
 	},
 	"service": {
+		"_internalInputMiddlewares": ["packetParser"],
+		"_internalOutputMiddlewares": [],
+		"name": "NO_NAMED_SERVICE",
 		"exchanges": {
 			"service": {
 				"type": "topic",
