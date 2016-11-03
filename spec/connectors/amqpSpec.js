@@ -1,6 +1,6 @@
 var di = require(__dirname + '/../../lib/di/di').create();
 
-var amqplibMock = require('../mocks/amqplibMock');
+var amqplibMock = require('../mocks/amqplibMock').mock();
 
 describe('Connectors', function() {
 	describe('AMQP', function() {
@@ -12,7 +12,10 @@ describe('Connectors', function() {
 			di.get('connectors/amqp', {url: 'localhost', port: '9047', user: 'user', pass: 'pass'})
 			.then(instance => amqp = instance)
 			.then(done)
-			.catch(err => done(err));
+			.catch(err => {
+				console.log(err);
+				done(err);
+			});
 		});
 
 		it('should call AMQP:connect when connect is called', function(done) {
@@ -91,6 +94,20 @@ describe('Connectors', function() {
 			.then(_ => {
 				expect(amqplibMock._methods.channel.close).toHaveBeenCalled();
 				expect(amqplibMock._methods.channel.close.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:consume when starting to consuming from a queue', function(done) {
+			spyOn(amqplibMock._methods.channel, 'consume').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.consume("test_queue", "function"))
+			.then(_ => {
+				expect(amqplibMock._methods.channel.consume).toHaveBeenCalledWith("test_queue", "function");
+				expect(amqplibMock._methods.channel.consume.calls.count()).toEqual(1);
 				done();
 			})
 			.catch(err => console.log(err));
