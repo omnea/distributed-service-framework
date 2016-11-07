@@ -1,21 +1,23 @@
 var di = require(__dirname + '/../../lib/di/di').create();
 
-var amqpMock = require('../mocks/amqpMock').mock();
+var AmqpMock = require('../mocks/amqpMock');
 
 describe('Patterns', function() {
 	describe('Service', function() {
 		var service;
+		var amqpMock;
+		var errorMessages;
 
 		beforeEach(function(done) {
+			amqpMock = AmqpMock.mock();
+
 			di.injectDependency('connectors/amqp', amqpMock);
 
-			di.get('patterns/service', serviceConfig)
-			.then(instance => service = instance)
-			.then(done)
-			.catch(err => {
-				console.log(err);
-				done(err);
-			});
+			Promise.all([
+				di.get('utils/errorMessages').then(messages => errorMessages = messages),
+				di.get('patterns/service', SERVICE_CONFIG).then(instance => service = instance)
+			]).then(done)
+			.catch(err => console.log(err));
 		});
 
 		it('should connect to amqp when started', function(done) {
@@ -47,7 +49,7 @@ describe('Patterns', function() {
 
 			service.start()
 			.then(_ => {
-				expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith('NO_NAMED_SERVICE_TEST_receive_test', serviceConfig.queues.service.options);
+				expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT, SERVICE_CONFIG.queues.service.options);
 				expect(amqpMock._methods.channel.queue.calls.count()).toEqual(1);
 				done();
 			})
@@ -65,11 +67,45 @@ describe('Patterns', function() {
 			})
 			.catch(err => console.log(err));
 		});
+
+		it('should throw and error if the callback do not return a Promise', function(done) {
+
+			service.setErrorCallback((err) => {
+				expect(err.message).toBe(errorMessages.callbackNotReturnPromise + ":DDDDD");
+				done();
+			});
+
+			service.start()
+			.then(service => {
+				service.on("Service", "route", () => ":DDDDD");
+				
+				amqpMock.mockHelpers.publish("Service", "route", "HOLA :D");
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call close on the amqp if the callback do not return a Promise', function(done) {
+			spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+			service.setErrorCallback((err) => {
+				expect(amqpMock._methods.connection.close).toHaveBeenCalled();
+				expect(amqpMock._methods.connection.close.calls.count()).toEqual(1);
+				done();
+			});
+
+			service.start()
+			.then(service => {
+				service.on("Service", "route", () => ":DDDDD");
+				
+				amqpMock.mockHelpers.publish("Service", "route", "HOLA :D");
+			})
+			.catch(err => console.log(err));
+		});
 	});
 });
 
 
-var serviceConfig = {
+var SERVICE_CONFIG = {
 	"name": "NO_NAMED_SERVICE_TEST",
 	"queues": {
 		"service": {
@@ -85,3 +121,5 @@ var serviceConfig = {
 		}
 	}
 };
+
+var QUEUE_NAME_RESULT = "NO_NAMED_SERVICE_TEST_receive_test";

@@ -9,7 +9,7 @@ describe('Connectors', function() {
 		beforeEach(function(done) {
 			di.injectDependency('connectors/amqplib', amqplibMock);
 
-			di.get('connectors/amqp', {url: 'localhost', port: '9047', user: 'user', pass: 'pass'})
+			di.get('connectors/amqp', CONNECTION_PARAMS)
 			.then(instance => amqp = instance)
 			.then(done)
 			.catch(err => {
@@ -23,7 +23,7 @@ describe('Connectors', function() {
 
 			amqp.connect()
 			.then(_ => {
-				expect(amqplibMock._methods.amqp.connect).toHaveBeenCalledWith('amqp://user:pass@localhost:9047');
+				expect(amqplibMock._methods.amqp.connect).toHaveBeenCalledWith(URL_CONNETION_RESULT);
 				expect(amqplibMock._methods.amqp.connect.calls.count()).toEqual(1);
 				done();
 			})
@@ -115,3 +115,6 @@ describe('Connectors', function() {
 
 	});
 });
+
+var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass'};
+var URL_CONNETION_RESULT = 'amqp://user:pass@localhost:9047';

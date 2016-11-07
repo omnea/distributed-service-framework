@@ -1,0 +1,3 @@
+{
+	"callbackNotReturnPromise": "Closing service. Reason: The callback MUST return a Promise. Not: "
+}
