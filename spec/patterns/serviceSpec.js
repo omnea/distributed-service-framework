@@ -2,6 +2,25 @@ var di = require(__dirname + '/../../lib/di/di').create();
 
 var AmqpMock = require('../mocks/amqpMock');
 
+var SERVICE_CONFIG = {
+	"name": "NO_NAMED_SERVICE_TEST",
+	"queues": {
+		"service": {
+			"nameSufix": "_receive_test",
+			"options": {
+				"exclusive": false,
+				"durable": true,
+				"autoDelete": false,
+				"arguments": {
+					
+				}
+			}
+		}
+	}
+};
+
+var QUEUE_NAME_RESULT = "NO_NAMED_SERVICE_TEST_receive_test";
+
 describe('Patterns', function() {
 	describe('Service', function() {
 		var service;
@@ -103,23 +122,3 @@ describe('Patterns', function() {
 		});
 	});
 });
-
-
-var SERVICE_CONFIG = {
-	"name": "NO_NAMED_SERVICE_TEST",
-	"queues": {
-		"service": {
-			"nameSufix": "_receive_test",
-			"options": {
-				"exclusive": false,
-				"durable": true,
-				"autoDelete": false,
-				"arguments": {
-					
-				}
-			}
-		}
-	}
-};
-
-var QUEUE_NAME_RESULT = "NO_NAMED_SERVICE_TEST_receive_test";
