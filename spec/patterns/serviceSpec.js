@@ -89,7 +89,7 @@ describe('Patterns', function() {
 
 		it('should throw and error if the callback do not return a Promise', function(done) {
 
-			service.setErrorCallback((err) => {
+			service.setErrorHandler((err) => {
 				expect(err.message).toBe(errorMessages.callbackNotReturnPromise + ":DDDDD");
 				done();
 			});
@@ -106,7 +106,7 @@ describe('Patterns', function() {
 		it('should call close on the amqp if the callback do not return a Promise', function(done) {
 			spyOn(amqpMock._methods.connection,'close').and.callThrough();
 
-			service.setErrorCallback((err) => {
+			service.setErrorHandler((err) => {
 				expect(amqpMock._methods.connection.close).toHaveBeenCalled();
 				expect(amqpMock._methods.connection.close.calls.count()).toEqual(1);
 				done();
@@ -117,6 +117,111 @@ describe('Patterns', function() {
 				service.on("Service", "route", () => ":DDDDD");
 				
 				amqpMock.mockHelpers.publish("Service", "route", "HOLA :D");
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should emit the messages after the callback finish', function(done) {
+			var serviceName = "Service";
+			var route = "Route";
+			var messageToEmit1 = {route: Math.random() + '', content: Math.random() + ''};
+			var messageToEmit2 = {route: Math.random() + '', content: Math.random() + ''};
+			var messageToEmit3 = {route: Math.random() + '', content: Math.random() + ''};
+			var message = "HOLA :D";
+
+			spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+			service.start()
+			.then(service => {
+				service.on(serviceName, route, (packet, emitter) => {
+					setTimeout(() => { //Set timeout because the emission is done after the function is finish.
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit1.route, messageToEmit1.content);
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit2.route, messageToEmit2.content);
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit3.route, messageToEmit3.content);
+						done();
+					}, 0);
+					
+					emitter.emit(messageToEmit1.route, messageToEmit1.content);
+					emitter.emit(messageToEmit2.route, messageToEmit2.content);
+					emitter.emit(messageToEmit3.route, messageToEmit3.content);
+					return Promise.resolve();
+				});
+				
+				amqpMock.mockHelpers.publish(serviceName, route, message);
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should ack the messages after the callback finish', function(done) {
+			var serviceName = "Service";
+			var route = "Route";
+			var message = "HOLA :D";
+
+			spyOn(amqpMock._methods.channel,'ack').and.callThrough();
+
+			service.start()
+			.then(service => {
+				service.on(serviceName, route, (packet, emitter) => {
+					setTimeout(() => { //Set timeout because the emission is done after the function is finish.
+						expect(amqpMock._methods.channel.ack).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.ack).toHaveBeenCalledWith(packet);
+						done();
+					}, 0);
+					
+					return Promise.resolve();
+				});
+				
+				amqpMock.mockHelpers.publish(serviceName, route, message);
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should reject the messages after the callback fail', function(done) {
+			var serviceName = "Service";
+			var route = "Route";
+			var message = "HOLA :D";
+
+			spyOn(amqpMock._methods.channel,'reject').and.callThrough();
+
+			service.start()
+			.then(service => {
+				service.on(serviceName, route, (packet, emitter) => {
+					setTimeout(() => { //Set timeout because the emission is done after the function is finish.
+						expect(amqpMock._methods.channel.reject).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.reject).toHaveBeenCalledWith(packet);
+						done();
+					}, 0);
+					
+					return Promise.reject();
+				});
+				
+				amqpMock.mockHelpers.publish(serviceName, route, message);
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should reject the messages after the callback fail', function(done) {
+			var serviceName = "Service";
+			var route = "Route";
+			var message = "HOLA :D";
+
+			spyOn(amqpMock._methods.channel,'close').and.callThrough();
+			spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+			service.start()
+			.then(service => {
+				service.on(serviceName, route, (packet, emitter) => {
+					setTimeout(() => { //Set timeout because the emission is done after the function is finish.
+						expect(amqpMock._methods.channel.close).not.toHaveBeenCalled();
+						expect(amqpMock._methods.connection.close).not.toHaveBeenCalled();
+						done();
+					}, 100); //100 miliseconds for avoiding order problems. With 0 always there is the posibility that any other async event put the close after this check. 100ms should be enough for not beeing before the close.
+					
+					return Promise.reject();
+				});
+				
+				amqpMock.mockHelpers.publish(serviceName, route, message);
 			})
 			.catch(err => console.log(err));
 		});

@@ -113,6 +113,56 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
+		it('should call AMQP:ack when adknowledge a message', function(done) {
+			spyOn(amqplibMock._methods.channel, 'ack').and.callThrough();
+
+			var message = {content: "data"};
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.ack(message)) //Fake message
+			.then(_ => {
+				expect(amqplibMock._methods.channel.ack).toHaveBeenCalledWith(message);
+				expect(amqplibMock._methods.channel.ack.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:nack when reject a message', function(done) {
+			spyOn(amqplibMock._methods.channel, 'nack').and.callThrough();
+
+			var message = {content: "data"};
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.reject(message)) //Fake message
+			.then(_ => {
+				expect(amqplibMock._methods.channel.nack).toHaveBeenCalledWith(message, false, false);
+				expect(amqplibMock._methods.channel.nack.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:publish when emit a message', function(done) {
+			spyOn(amqplibMock._methods.channel, 'publish').and.callThrough();
+
+			var message = {content: "data"};
+			var service = "Service";
+			var route = "Route";
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.emit(service, route, message)) //Fake message
+			.then(_ => {
+				expect(amqplibMock._methods.channel.publish).toHaveBeenCalledWith(service, route, message);
+				expect(amqplibMock._methods.channel.publish.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
 	});
 });
 

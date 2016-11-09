@@ -17,7 +17,10 @@ exports.mock = function () {
 				assertQueue:    () => Promise.resolve( {queue:    "testQueue"} ),
 				bindQueue:      () => Promise.resolve(),
 				close:          () => Promise.resolve(),
-				consume:        () => Promise.resolve(),
+				ack:            () => Promise.resolve(),
+				nack:           () => Promise.resolve(),
+				publish:        () => Promise.resolve(),
+				consume:        () => Promise.resolve({consumerTag: "3408c524309c57n2105"})
 			};
 
 			_methods.amqp = amqp;

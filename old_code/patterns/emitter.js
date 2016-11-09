@@ -13,15 +13,7 @@ module.exports = class Emitter {
 		this.events.push(packet);
 	}
 
-	rpc(service, route, data) {
-		var packet = this.emitPacketFactory.build(route, data);
-
-		if(!packet) return;
-
-		return this.rpc.send(service, route, data);
-	}
-
-	getEvents () {
+	getAllMessages () {
 		return this.events;
 	}
 };
