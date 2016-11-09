@@ -20,9 +20,12 @@ exports.mock = function () {
 				bind:     () => Promise.resolve(),
 				close:    () => Promise.resolve(),
 				cancel:   () => Promise.resolve(),
+				ack:      () => Promise.resolve(),
+				reject:   () => Promise.resolve(),
+				emit:     () => Promise.resolve(),
 				consume:  (_, callback) => {
 					consumeFunction = callback;
-					return Promise.resolve({consumerTag: "3408c524309c57n2105"});
+					return Promise.resolve("3408c524309c57n2105");
 				}
 			};
 
