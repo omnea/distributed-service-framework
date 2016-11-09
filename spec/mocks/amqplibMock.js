@@ -27,7 +27,7 @@ exports.mock = function () {
 			_methods.connection = connection;
 			_methods.channel = channel;
 			
-			return amqp;
+			return Promise.resolve(amqp);
 		}
 	};
 };
