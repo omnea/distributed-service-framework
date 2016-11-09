@@ -42,7 +42,7 @@ exports.mock = function () {
 				});
 			});
 			
-			return connection;
+			return Promise.resolve(connection);
 		}
 	};
 };
