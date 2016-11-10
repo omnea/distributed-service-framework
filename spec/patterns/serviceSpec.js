@@ -98,7 +98,7 @@ describe('Patterns', function() {
 			.then(service => {
 				service.on("Service", "route", () => ":DDDDD");
 				
-				amqpMock.mockHelpers.publish("Service", "route", "HOLA :D");
+				amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
 			})
 			.catch(err => console.log(err));
 		});
@@ -116,7 +116,7 @@ describe('Patterns', function() {
 			.then(service => {
 				service.on("Service", "route", () => ":DDDDD");
 				
-				amqpMock.mockHelpers.publish("Service", "route", "HOLA :D");
+				amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDD");
 			})
 			.catch(err => console.log(err));
 		});
@@ -127,7 +127,7 @@ describe('Patterns', function() {
 			var messageToEmit1 = {route: Math.random() + '', content: Math.random() + ''};
 			var messageToEmit2 = {route: Math.random() + '', content: Math.random() + ''};
 			var messageToEmit3 = {route: Math.random() + '', content: Math.random() + ''};
-			var message = "HOLA :D";
+			var message = "HOLA :DDDDD";
 
 			spyOn(amqpMock._methods.channel,'emit').and.callThrough();
 
@@ -156,7 +156,7 @@ describe('Patterns', function() {
 		it('should ack the messages after the callback finish', function(done) {
 			var serviceName = "Service";
 			var route = "Route";
-			var message = "HOLA :D";
+			var message = "HOLA :DDDD";
 
 			spyOn(amqpMock._methods.channel,'ack').and.callThrough();
 
@@ -180,7 +180,7 @@ describe('Patterns', function() {
 		it('should reject the messages after the callback fail', function(done) {
 			var serviceName = "Service";
 			var route = "Route";
-			var message = "HOLA :D";
+			var message = "HOLA :DDD";
 
 			spyOn(amqpMock._methods.channel,'reject').and.callThrough();
 
@@ -204,7 +204,7 @@ describe('Patterns', function() {
 		it('should reject the messages after the callback fail', function(done) {
 			var serviceName = "Service";
 			var route = "Route";
-			var message = "HOLA :D";
+			var message = "HOLA :DD";
 
 			spyOn(amqpMock._methods.channel,'close').and.callThrough();
 			spyOn(amqpMock._methods.connection,'close').and.callThrough();
