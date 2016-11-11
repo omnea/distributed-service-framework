@@ -1,7 +1,10 @@
+var uuid = require('node-uuid').v4;
+
 exports.mock = function () {
 	var _methods = {};
 	var mockHelpers = {};
 
+	var id = uuid();
 	var consumeFunction = null;
 
 	return {
@@ -38,7 +41,8 @@ exports.mock = function () {
 						exchange: service,
 						routingKey: route
 					},
-					properties: {}
+					properties: {},
+					_mock_uuid: id
 				});
 			});
 			
