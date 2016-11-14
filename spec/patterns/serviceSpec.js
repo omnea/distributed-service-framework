@@ -203,7 +203,7 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
-			it('should reject the messages after the callback fail', function(done) {
+			it('should not close the connection in case of error in handler', function(done) {
 				var serviceName = "Service";
 				var route = "Route";
 				var message = "HOLA :DD";
@@ -304,7 +304,7 @@ describe('Patterns', function() {
 				var middlewaresResultsOrdered = [];
 				var middlewaresResults = [];
 
-				var middlewares = new Array(100).fill(0).map((valie, index) => {
+				var middlewares = new Array(100).fill(0).map((_, index) => {
 					middlewaresResultsOrdered.push(index);
 					service.middleware(() => { 
 						middlewaresResults.push(index);
@@ -362,11 +362,12 @@ describe('Patterns', function() {
 
 			it('should execute the error handler if a middleware doesn\'t return a promise', function(done) {
 				var middlewareReturn = 'Not a promise :D';
+				var expected_message = errorMessages.callbackNotReturnPromise + middlewareReturn;
 
 				service.middleware(() => middlewareReturn, true);
 
 				service.setErrorHandler((err) => {
-					expect(err.message).toBe(errorMessages.callbackNotReturnPromise + middlewareReturn);
+					expect(err.message).toBe(expected_message);
 					done();
 				});
 
@@ -376,7 +377,7 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
-			it('should finish if a middleware doesn\'t return a promise', function(done) {
+			it('should finish the service execution if a middleware doesn\'t return a promise', function(done) {
 				var middlewareReturn = 'Not a promise :D';
 
 				spyOn(amqpMock._methods.channel,'close').and.callThrough();

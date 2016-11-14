@@ -1,6 +1,5 @@
 # Dependencies
 
- - `npm install jasmine -g`
  - node > 6
 
 # Installation
@@ -11,6 +10,28 @@
 # Testing
 
 - npm test
+
+# Fast start
+
+This framework works defining subscriptions to services and allowing to emit messages in the process of the message.
+
+``` javascript
+    var SF = require('@omneagmbh/distributed-service-framework');
+
+    SF.start({name: "test"})
+    .then(service => {
+        service.on('otherService', 'route.*.to.listen.#', (packet, emitter) => {
+            return new Promise((resolve, reject) => {
+                emitter.emit('route.to.emit.the.message', {data: "Hello :D"});
+                resolve(); //or reject(error)
+            });
+        });
+    });
+```
+
+The routes added with on MUST return a Promise, always. If not, the service will reject to continue and will close itself.
+If the promise is resolved, the messages emitted with the emitter, will be published in amqp and the message will be ack, if the promise is rejected, nothing will be published and the message will be nack.
+
 
 # Notes:
 

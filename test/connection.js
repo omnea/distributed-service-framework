@@ -1,11 +1,11 @@
 var error = require('debug')('Omnea:SF:error');
 var log = require('debug')('Omnea:SF:log');
 
-var Service = require('../lib/facade.js');
+var Service = require('../lib/app.js');
 
-Service.start()
+Service.start({name: "children"})
 .catch(error)
 .then(service => {
 	service.on('mother', 'come.to.dinner', log)
-	.catch(_ => {});
+	.catch(err => console.log(err));
 });
