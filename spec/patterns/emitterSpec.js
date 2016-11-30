@@ -33,7 +33,7 @@ describe('Patterns', function() {
 				var messages = Array.from(emitter.getAllMessages());
 				
 				expect(messages.length).toBe(1);
-				expect(messages[0]).toEqual(data);
+				expect(messages[0]).toEqual({route: data.route, content: new Buffer.from(String(data.content))});
 			});
 
 			it('should return an iterator with all the emitted messages in order', function() {
@@ -52,7 +52,7 @@ describe('Patterns', function() {
 				expect(messages.length).toBe(length);
 
 				datas.forEach((data, index) => 
-					expect(messages[index]).toEqual(data)
+					expect(messages[index]).toEqual({route: data.route, content: new Buffer.from(String(data.content))})
 				);
 			});
 		});

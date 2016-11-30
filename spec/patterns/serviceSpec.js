@@ -5,21 +5,39 @@ var AmqpMock = require('../mocks/amqpMock');
 var SERVICE_CONFIG = {
 	"name": "NO_NAMED_SERVICE_TEST",
 	"queues": {
-		"service": {
-			"nameSufix": "_receive_test",
+		"consume": {
+			"sufix": "_consume_test",
 			"options": {
 				"exclusive": false,
 				"durable": true,
 				"autoDelete": false,
-				"arguments": {
-					
-				}
+				"arguments": {}
+			}
+		},
+		"receive": {
+			"sufix": "_receive_test",
+			"options": {
+				"exclusive": false,
+				"durable": true,
+				"autoDelete": false,
+				"arguments": {}
+			}
+		},
+		"error": {
+			"sufix": "_error_test",
+			"options": {
+				"exclusive": false,
+				"durable": true,
+				"autoDelete": false,
+				"arguments": {}
 			}
 		}
 	}
 };
 
-var QUEUE_NAME_RESULT = "NO_NAMED_SERVICE_TEST_receive_test";
+var QUEUE_NAME_RESULT_CONSUME = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.consume.sufix;
+var QUEUE_NAME_RESULT_RECEIVE = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.receive.sufix;
+var QUEUE_NAME_RESULT_ERROR = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.error.sufix;
 
 describe('Patterns', function() {
 	describe('Service', function() {
@@ -36,7 +54,7 @@ describe('Patterns', function() {
 
 				Promise.all([
 					di.get('utils/errorMessages').then(messages => errorMessages = messages),
-					di.get('patterns/service', SERVICE_CONFIG).then(instance => service = instance)
+					di.get('patterns/service', {service: SERVICE_CONFIG}).then(instance => service = instance)
 				]).then(done)
 				.catch(err => console.log(err));
 			});
@@ -53,25 +71,27 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
-			it('should try to create a channel when started', function(done) {
+			it('should try to create three channels when started', function(done) {
 				spyOn(amqpMock._methods.connection,'channel').and.callThrough();
 
 				service.start()
 				.then(() => {
 					expect(amqpMock._methods.connection.channel).toHaveBeenCalled();
-					expect(amqpMock._methods.connection.channel.calls.count()).toEqual(1);
+					expect(amqpMock._methods.connection.channel.calls.count()).toEqual(3);
 					done();
 				})
 				.catch(err => console.log(err));
 			});
 
-			it('should try to create a queue when started', function(done) {
+			it('should try to create three queues when started', function(done) {
 				spyOn(amqpMock._methods.channel,'queue').and.callThrough();
 
 				service.start()
 				.then(() => {
-					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT, SERVICE_CONFIG.queues.service.options);
-					expect(amqpMock._methods.channel.queue.calls.count()).toEqual(1);
+					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_CONSUME, SERVICE_CONFIG.queues.consume.options);
+					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_RECEIVE, SERVICE_CONFIG.queues.receive.options);
+					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_ERROR, SERVICE_CONFIG.queues.error.options);
+					expect(amqpMock._methods.channel.queue.calls.count()).toEqual(3);
 					done();
 				})
 				.catch(err => console.log(err));
@@ -131,6 +151,12 @@ describe('Patterns', function() {
 				var messageToEmit3 = {route: Math.random() + '', content: Math.random() + ''};
 				var message = "HOLA :DDDDD";
 
+				var processesContents = [
+					new Buffer.from(String(messageToEmit1.content)),
+					new Buffer.from(String(messageToEmit2.content)),
+					new Buffer.from(String(messageToEmit3.content)),
+				];
+
 				spyOn(amqpMock._methods.channel,'emit').and.callThrough();
 
 				service.start()
@@ -138,9 +164,9 @@ describe('Patterns', function() {
 					service.on(serviceName, route, (packet, emitter) => {
 						setTimeout(() => { //Set timeout because the emission is done after the function is finish.
 							expect(amqpMock._methods.channel.emit).toHaveBeenCalled();
-							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit1.route, messageToEmit1.content);
-							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit2.route, messageToEmit2.content);
-							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit3.route, messageToEmit3.content);
+							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit1.route, processesContents[0]);
+							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit2.route, processesContents[1]);
+							expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit3.route, processesContents[2]);
 							done();
 						}, 0);
 						

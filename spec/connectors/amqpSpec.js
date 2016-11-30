@@ -2,6 +2,9 @@ var di = require(__dirname + '/../../lib/di/di').create();
 
 var amqplibMock = require('../mocks/amqplibMock').mock();
 
+var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass'};
+var URL_CONNETION_RESULT = 'amqp://user:pass@localhost:9047?heartbeat=10&channelMax=3';
+
 describe('Connectors', function() {
 	describe('AMQP', function() {
 		var amqp;
@@ -9,7 +12,7 @@ describe('Connectors', function() {
 		beforeEach(function(done) {
 			di.injectDependency('connectors/amqplib', amqplibMock);
 
-			di.get('connectors/amqp', CONNECTION_PARAMS)
+			di.get('connectors/amqp', {amqp: CONNECTION_PARAMS})
 			.then(instance => amqp = instance)
 			.then(done)
 			.catch(err => {
@@ -165,6 +168,3 @@ describe('Connectors', function() {
 
 	});
 });
-
-var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass'};
-var URL_CONNETION_RESULT = 'amqp://user:pass@localhost:9047';
