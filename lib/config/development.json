@@ -4,7 +4,8 @@
 		"port": 5672,
 		"user": "test",
 		"pass": "test",
-		"heartbeat": 10
+		"heartbeat": 10,
+		"channelMax": 3
 	},
 	"service": {
 		"_internalInputMiddlewares": ["packetParser"],
@@ -22,15 +23,31 @@
 			}
 		} ,
 		"queues": {
-			"service": {
-				"nameSufix": "_receive",
+			"consume": {
+				"sufix": "_consume",
 				"options": {
 					"exclusive": false,
 					"durable": true,
 					"autoDelete": false,
-					"arguments": {
-						
-					}
+					"arguments": {}
+				}
+			},
+			"receive": {
+				"sufix": "_receive",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {}
+				}
+			},
+			"error": {
+				"sufix": "_error",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {}
 				}
 			}
 		}
