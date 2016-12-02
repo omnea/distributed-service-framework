@@ -1,6 +1,6 @@
 {
 	"amqp": {
-		"url": "5.9.156.76",
+		"url": "88.99.15.151",
 		"port": 5672,
 		"user": "test",
 		"pass": "test",
@@ -54,7 +54,7 @@
 				},
 				"bindings": [
 					{
-						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "queue", "name": "consume"},
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "queue", "name": "service"},
 						"route": "_error"
 					}
 				]
