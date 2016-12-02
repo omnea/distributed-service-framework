@@ -4,40 +4,50 @@ var AmqpMock = require('../mocks/amqpMock');
 
 var SERVICE_CONFIG = {
 	"name": "NO_NAMED_SERVICE_TEST",
+	"queueSeparator": '.',
 	"queues": {
 		"consume": {
-			"sufix": "_consume_test",
+			"name": "_consume_test",
 			"options": {
 				"exclusive": false,
 				"durable": true,
 				"autoDelete": false,
-				"arguments": {}
+				"arguments": {
+					"deadLetterExchange": false,
+					"deadLetterRoutingKey": false
+				}
 			}
 		},
-		"receive": {
-			"sufix": "_receive_test",
+		"delay": {
+			"name": "_delay_test",
 			"options": {
 				"exclusive": false,
 				"durable": true,
 				"autoDelete": false,
-				"arguments": {}
+				"arguments": {
+					"deadLetterExchange": false,
+					"deadLetterRoutingKey": false
+				}
 			}
 		},
 		"error": {
-			"sufix": "_error_test",
+			"name": "_error_test",
 			"options": {
 				"exclusive": false,
 				"durable": true,
 				"autoDelete": false,
-				"arguments": {}
+				"arguments": {
+					"deadLetterExchange": false,
+					"deadLetterRoutingKey": false
+				}
 			}
 		}
 	}
 };
 
-var QUEUE_NAME_RESULT_CONSUME = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.consume.sufix;
-var QUEUE_NAME_RESULT_RECEIVE = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.receive.sufix;
-var QUEUE_NAME_RESULT_ERROR = SERVICE_CONFIG.name + SERVICE_CONFIG.queues.error.sufix;
+var QUEUE_NAME_RESULT_CONSUME = SERVICE_CONFIG.name + SERVICE_CONFIG.queueSeparator +  SERVICE_CONFIG.queues.consume.name;
+var QUEUE_NAME_RESULT_DELAY = SERVICE_CONFIG.name + SERVICE_CONFIG.queueSeparator +  SERVICE_CONFIG.queues.delay.name;
+var QUEUE_NAME_RESULT_ERROR = SERVICE_CONFIG.name + SERVICE_CONFIG.queueSeparator +  SERVICE_CONFIG.queues.error.name;
 
 describe('Patterns', function() {
 	describe('Service', function() {
@@ -89,7 +99,7 @@ describe('Patterns', function() {
 				service.start()
 				.then(() => {
 					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_CONSUME, SERVICE_CONFIG.queues.consume.options);
-					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_RECEIVE, SERVICE_CONFIG.queues.receive.options);
+					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_DELAY, SERVICE_CONFIG.queues.delay.options);
 					expect(amqpMock._methods.channel.queue).toHaveBeenCalledWith(QUEUE_NAME_RESULT_ERROR, SERVICE_CONFIG.queues.error.options);
 					expect(amqpMock._methods.channel.queue.calls.count()).toEqual(3);
 					done();

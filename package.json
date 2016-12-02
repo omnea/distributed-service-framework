@@ -3,10 +3,18 @@
   "version": "0.0.1",
   "description": "Basic framework for developing distributed services. It handles messages, acknowledgment and errors",
   "main": "lib/app.js",
+  "watch": {
+    "test": {
+      "patterns": ["lib", "spec"],
+      "extensions": "js",
+      "quiet": true
+    }
+  },
   "scripts": {
     "test": "NODE_ENV=test ./node_modules/.bin/jasmine",
     "start-dev": "NODE_ENV=development DEBUG=Omnea:* node ./lib/app.js",
-    "start-prod": "NODE_ENV=production DEBUG=*:error node ./lib/app.js"
+    "start-prod": "NODE_ENV=production DEBUG=*:error node ./lib/app.js",
+    "watch": "npm-watch"
   },
   "repository": {
     "type": "git",
@@ -22,6 +30,7 @@
   "dependencies": {
     "amqplib": "^0.4.2",
     "debug": "^2.2.0",
+    "deepmerge": "^1.3.0",
     "node-uuid": "^1.4.7"
   },
   "devDependencies": {

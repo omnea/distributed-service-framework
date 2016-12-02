@@ -2,8 +2,8 @@ var di = require(__dirname + '/../../lib/di/di').create();
 
 var amqplibMock = require('../mocks/amqplibMock').mock();
 
-var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass'};
-var URL_CONNETION_RESULT = 'amqp://user:pass@localhost:9047?heartbeat=10&channelMax=3';
+var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass', heartbeat: 25, channelMax: 5};
+var URL_CONNECTION_RESULT = 'amqp://user:pass@localhost:9047?heartbeat=25&channelMax=5';
 
 describe('Connectors', function() {
 	describe('AMQP', function() {
@@ -26,7 +26,7 @@ describe('Connectors', function() {
 
 			amqp.connect()
 			.then(_ => {
-				expect(amqplibMock._methods.amqp.connect).toHaveBeenCalledWith(URL_CONNETION_RESULT);
+				expect(amqplibMock._methods.amqp.connect).toHaveBeenCalledWith(URL_CONNECTION_RESULT);
 				expect(amqplibMock._methods.amqp.connect.calls.count()).toEqual(1);
 				done();
 			})

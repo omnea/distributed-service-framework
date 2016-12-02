@@ -4,13 +4,13 @@
 		"port": 5672,
 		"user": "test",
 		"pass": "test",
-		"heartbeat": 10,
+		"heartbeat": 20,
 		"channelMax": 3
 	},
 	"service": {
-		"_internalInputMiddlewares": ["packetParser"],
-		"_internalOutputMiddlewares": [],
 		"name": "NO_NAMED_SERVICE",
+		"closeTimeout": 60,
+		"queueSeparator": ".",
 		"exchanges": {
 			"service": {
 				"type": "topic",
@@ -21,19 +21,22 @@
 					"alternateExchange": "Error"
 				}
 			}
-		} ,
+		},
 		"queues": {
 			"consume": {
-				"sufix": "_consume",
+				"name": "consume",
 				"options": {
 					"exclusive": false,
 					"durable": true,
 					"autoDelete": false,
-					"arguments": {}
+					"arguments": {
+						"deadLetterExchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"deadLetterRoutingKey": "_error"
+					}
 				}
 			},
-			"receive": {
-				"sufix": "_receive",
+			"delay": {
+				"name": "receive",
 				"options": {
 					"exclusive": false,
 					"durable": true,
@@ -42,13 +45,19 @@
 				}
 			},
 			"error": {
-				"sufix": "_error",
+				"name": "error",
 				"options": {
 					"exclusive": false,
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {}
-				}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "queue", "name": "consume"},
+						"route": "_error"
+					}
+				]
 			}
 		}
 	}
