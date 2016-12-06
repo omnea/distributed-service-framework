@@ -8,7 +8,7 @@
 		"channelMax": 3
 	},
 	"service": {
-		"name": "NO_NAMED_SERVICE",
+		"name": "test-reject",
 		"closeTimeout": 60,
 		"globalSeparator": ".",
 		"exchanges": {

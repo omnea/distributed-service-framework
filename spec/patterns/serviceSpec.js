@@ -13,8 +13,9 @@ var SERVICE_CONFIG = {
 				"durable": true,
 				"autoDelete": false,
 				"arguments": {
-					"deadLetterExchange": false,
-					"deadLetterRoutingKey": false
+					"x-dead-letter-exchange": false,
+					"x-dead-letter-routing-key": false,
+					"x-message-ttl": false
 				}
 			}
 		},
@@ -25,8 +26,9 @@ var SERVICE_CONFIG = {
 				"durable": true,
 				"autoDelete": false,
 				"arguments": {
-					"deadLetterExchange": false,
-					"deadLetterRoutingKey": false
+					"x-dead-letter-exchange": false,
+					"x-dead-letter-routing-key": false,
+					"x-message-ttl": false
 				}
 			}
 		},
@@ -37,8 +39,9 @@ var SERVICE_CONFIG = {
 				"durable": true,
 				"autoDelete": false,
 				"arguments": {
-					"deadLetterExchange": false,
-					"deadLetterRoutingKey": false
+					"x-dead-letter-exchange": false,
+					"x-dead-letter-routing-key": false,
+					"x-message-ttl": false
 				}
 			}
 		}

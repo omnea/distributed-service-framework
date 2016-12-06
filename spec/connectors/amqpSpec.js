@@ -159,7 +159,7 @@ describe('Connectors', function() {
 			.then(connection => connection.channel())
 			.then(channel => channel.emit(service, route, message)) //Fake message
 			.then(_ => {
-				expect(amqplibMock._methods.channel.publish).toHaveBeenCalledWith(service, route, message);
+				expect(amqplibMock._methods.channel.publish).toHaveBeenCalledWith(service, route, message, undefined);
 				expect(amqplibMock._methods.channel.publish.calls.count()).toEqual(1);
 				done();
 			})

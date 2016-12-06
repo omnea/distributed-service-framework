@@ -18,15 +18,17 @@ exports.mock = function () {
 			};
 
 			var channel = {
-				exchange: () => Promise.resolve("testExchange"),
-				queue:    () => Promise.resolve("testQueue"),
-				bindQueue:() => Promise.resolve(),
-				close:    () => Promise.resolve(),
-				cancel:   () => Promise.resolve(),
-				ack:      () => Promise.resolve(),
-				reject:   () => Promise.resolve(),
-				emit:     () => Promise.resolve(),
-				consume:  (_, callback) => {
+				exchange:      () => Promise.resolve("testExchange"),
+				checkExchange: () => Promise.resolve(),
+				queue:         () => Promise.resolve("testQueue"),
+				checkQueue:    () => Promise.resolve(),
+				bindQueue:     () => Promise.resolve(),
+				close:         () => Promise.resolve(),
+				cancel:        () => Promise.resolve(),
+				ack:           () => Promise.resolve(),
+				reject:        () => Promise.resolve(),
+				emit:          () => Promise.resolve(),
+				consume:       (_, callback) => {
 					consumeFunction = callback;
 					return Promise.resolve("3408c524309c57n2105");
 				}
