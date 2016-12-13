@@ -1,0 +1,97 @@
+{
+	"amqp": {
+		"url": "88.99.15.151",
+		"port": 5672,
+		"user": "test",
+		"pass": "test",
+		"heartbeat": 20,
+		"channelMax": 3
+	},
+	"service": {
+		"name": "test-reject",
+		"closeTimeout": 60,
+		"globalSeparator": ".",
+		"exchanges": {
+			"service": {
+				"name": "",
+				"type": "topic",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "globalErrorExchange"}
+				}
+			},
+			"delay": {
+				"name": "delay",
+				"type": "fanout",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "globalErrorExchange"}
+				}
+			}
+		},
+		"queues": {
+			"consume": {
+				"name": "consume",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"x-dead-letter-routing-key": "_error",
+						"x-message-ttl": 10000
+					}
+				}
+			},
+			"delay": {
+				"name": "delay",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"x-message-ttl": 5000
+					}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "delay"},
+						"route": ""
+					}
+				]
+			},
+			"error": {
+				"name": "error",
+				"options": {
+					"exclusive": false,
+					"durable": true,
+					"autoDelete": false,
+					"arguments": {}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"route": "_error"
+					}
+				]
+			}
+		}
+	},
+	"globalErrorQueue": {
+		"name": "global.error",
+		"options": {
+			"exclusive": false,
+			"durable": true,
+			"autoDelete": false,
+			"arguments": {}
+		}
+	},
+	"globalErrorExchange": {
+		"name": "global.error"
+	}
+}
