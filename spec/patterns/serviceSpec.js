@@ -5,6 +5,7 @@ var AmqpMock = require('../mocks/amqpMock');
 var SERVICE_CONFIG = {
 	"name": "NO_NAMED_SERVICE_TEST",
 	"queueSeparator": '.',
+	"closeTimeout": 1,
 	"queues": {
 		"consume": {
 			"name": "_consume_test",
@@ -84,6 +85,18 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
+			it('should cancel in case of internal error', function(done) {
+				var di = require(__dirname + '/../../lib/di/di').create();
+
+				di.injectDependency('connectors/amqp', AmqpMock.mock({channel_error: true, consume_error: true}));
+				
+				di.get('patterns/service', {service: SERVICE_CONFIG})
+				.then(instance => {
+					return instance.start()
+					.catch(err => done());
+				});
+			});
+
 			it('should try to create three channels when started', function(done) {
 				spyOn(amqpMock._methods.connection,'channel').and.callThrough();
 
@@ -152,6 +165,69 @@ describe('Patterns', function() {
 					service.on("Service", "route", () => ":DDDDD");
 					
 					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDD");
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should wait untill all messages are processed when close', function(done) {
+				var errorRoute = "route";
+				var waitRoute = "route2";
+
+				spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+				service.setErrorHandler((err) => {
+					expect(amqpMock._methods.connection.close).toHaveBeenCalled();
+					expect(amqpMock._methods.connection.close.calls.count()).toEqual(1);
+					done();
+				});
+
+				service.start()
+				.then(service => {
+					service.on("Service", waitRoute, () => new Promise((resolve, reject) => {
+						setTimeout(resolve, 100);	
+					}));
+
+					service.on("Service", errorRoute, () => ":DDDDD");
+					
+					amqpMock.mockHelpers.publish("Service", waitRoute, "HOLA :DDDDDD");
+					amqpMock.mockHelpers.publish("Service", errorRoute, "HOLA :DDDDDD");
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should close the connection if a message takes more than the close timeout', function(done) {
+				var errorRoute = "route";
+				var waitRoute = "route2";
+				var serviceName = "Service";
+
+				var isTheCallbackExecuted = false;
+
+				var checkNotFinish = function() {
+					return new Promise((resolve, reject) => {
+						setTimeout(() => {
+							resolve();
+							isTheCallbackExecuted = true;
+						}, 2000);
+					});
+				};
+
+				spyOn({checkNotFinish},'checkNotFinish').and.callThrough();
+				spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+				service.setErrorHandler((err) => {
+					expect(amqpMock._methods.connection.close).toHaveBeenCalled();
+					expect(amqpMock._methods.connection.close.calls.count()).toEqual(1);
+					expect(isTheCallbackExecuted).toBe(false);
+					done();
+				});
+
+				service.start()
+				.then(service => {
+					service.on(serviceName, waitRoute, checkNotFinish);
+					service.on(serviceName, errorRoute, () => "not a promise");
+					
+					amqpMock.mockHelpers.publish(serviceName, waitRoute, "HOLA :DDDDDD");
+					amqpMock.mockHelpers.publish(serviceName, errorRoute, "HOLA :DDDDDD");
 				})
 				.catch(err => console.log(err));
 			});
@@ -266,6 +342,48 @@ describe('Patterns', function() {
 				})
 				.catch(err => console.log(err));
 			});
+
+			it('should stop consuming messages after the off', function(done) {
+
+				var callback = jasmine.createSpy('callback');
+
+				service.start()
+				.then(service => {
+					service.on("Service", "route", callback);
+					service.off("Service", "route", callback);
+					
+					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+				})
+				.then(() => {
+					setTimeout(() => {
+						expect(callback).not.toHaveBeenCalled();
+						done();
+					}, 100);
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should stop and restart with success', function(done) {
+				spyOn(amqpMock._methods.channel,'consume').and.callThrough();
+				spyOn(amqpMock._methods.channel,'cancel').and.callThrough();
+				
+				var callback = jasmine.createSpy('callback');
+
+				service.start()
+				.then(service => {
+					expect(amqpMock._methods.channel.consume).toHaveBeenCalled();
+					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(1);
+
+					service.stop()
+					.then(() => {
+						expect(amqpMock._methods.channel.cancel).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.cancel.calls.count()).toEqual(1);
+					})
+					.then(done);
+				})
+				.catch(err => console.log(err));
+			});
+
 		});
 
 		describe('Middlewares', function() {

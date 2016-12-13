@@ -1,15 +1,17 @@
 var di = require(__dirname + '/../../lib/di/di').create();
 
-var amqplibMock = require('../mocks/amqplibMock').mock();
+var AmqplibMock = require('../mocks/amqplibMock');
 
 var CONNECTION_PARAMS = {url: 'localhost', port: '9047', user: 'user', pass: 'pass', heartbeat: 25, channelMax: 5};
 var URL_CONNECTION_RESULT = 'amqp://user:pass@localhost:9047?heartbeat=25&channelMax=5';
 
 describe('Connectors', function() {
 	describe('AMQP', function() {
-		var amqp;
+		var amqp, amqplibMock;
 
 		beforeEach(function(done) {
+			amqplibMock = AmqplibMock.mock();
+
 			di.injectDependency('connectors/amqplib', amqplibMock);
 
 			di.get('connectors/amqp', {amqp: CONNECTION_PARAMS})
@@ -46,6 +48,10 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
+		it('should call throw an exception if there isn\'t a connection', function() {
+			expect(() => amqp.channel()).toThrow();
+		});
+
 		it('should call AMQP:assertExchange when a exchange is declared', function(done) {
 			spyOn(amqplibMock._methods.channel, 'assertExchange').and.callThrough();
 
@@ -55,6 +61,38 @@ describe('Connectors', function() {
 			.then(_ => {
 				expect(amqplibMock._methods.channel.assertExchange).toHaveBeenCalledWith("name", "type", "options");
 				expect(amqplibMock._methods.channel.assertExchange.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:checkQueue when a a queue is checked', function(done) {
+			var QUEUE_NAME = 'name';
+
+			spyOn(amqplibMock._methods.channel, 'checkQueue').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.checkQueue(QUEUE_NAME))
+			.then(_ => {
+				expect(amqplibMock._methods.channel.checkQueue).toHaveBeenCalledWith(QUEUE_NAME);
+				expect(amqplibMock._methods.channel.checkQueue.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:checkExchange when a a queue is checked', function(done) {
+			var QUEUE_NAME = 'name';
+
+			spyOn(amqplibMock._methods.channel, 'checkExchange').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.checkExchange(QUEUE_NAME))
+			.then(_ => {
+				expect(amqplibMock._methods.channel.checkExchange).toHaveBeenCalledWith(QUEUE_NAME);
+				expect(amqplibMock._methods.channel.checkExchange.calls.count()).toEqual(1);
 				done();
 			})
 			.catch(err => console.log(err));
@@ -88,6 +126,56 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
+		it('should call AMQP:unbindQueue when a new queue is binded', function(done) {
+			spyOn(amqplibMock._methods.channel, 'unbindQueue').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.unbindQueue("queueName", "exchangeSource", "route", "options"))
+			.then(_ => {
+				expect(amqplibMock._methods.channel.unbindQueue).toHaveBeenCalledWith("queueName", "exchangeSource", "route", "options");
+				expect(amqplibMock._methods.channel.unbindQueue.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should reject the proise if the AMQP:bindQueue fail', function(done) {
+			amqplibMock._methods.channel.bindQueue = () => Promise.reject('Bind failed');
+
+			spyOn(amqplibMock._methods.channel, 'bindQueue').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.bindQueue("queueName", "exchangeSource", "route", "options"))
+			.then(() => {
+				console.log(arguments);
+			})
+			.catch((err) => {
+				expect(err instanceof Error).toBe(true);
+				expect(err.message.startsWith('Bind failed')).toBe(true);
+				done();
+			});
+		});
+
+		it('should reject the proise if the AMQP:unbindQueue fail', function(done) {
+			amqplibMock._methods.channel.unbindQueue = () => Promise.reject();
+
+			spyOn(amqplibMock._methods.channel, 'unbindQueue').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.unbindQueue("failBind", "exchangeSource", "route", "options"))
+			.then(() => {
+				console.log(arguments);
+			})
+			.catch((err) => {
+				expect(err instanceof Error).toBe(true);
+				expect(err.message.startsWith('Unbind failed')).toBe(true);
+				done();
+			});
+		});
+
 		it('should call AMQP:close when a new channel closed', function(done) {
 			spyOn(amqplibMock._methods.channel, 'close').and.callThrough();
 
@@ -102,6 +190,19 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
+		it('should call AMQP:close when a new connection is closed', function(done) {
+			spyOn(amqplibMock._methods.connection, 'close').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.close())
+			.then(_ => {
+				expect(amqplibMock._methods.connection.close).toHaveBeenCalled();
+				expect(amqplibMock._methods.connection.close.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
 		it('should call AMQP:consume when starting to consuming from a queue', function(done) {
 			spyOn(amqplibMock._methods.channel, 'consume').and.callThrough();
 
@@ -111,6 +212,20 @@ describe('Connectors', function() {
 			.then(_ => {
 				expect(amqplibMock._methods.channel.consume).toHaveBeenCalledWith("test_queue", "function");
 				expect(amqplibMock._methods.channel.consume.calls.count()).toEqual(1);
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
+		it('should call AMQP:cancel when stop consuming from a queue', function(done) {
+			spyOn(amqplibMock._methods.channel, 'cancel').and.callThrough();
+
+			amqp.connect()
+			.then(connection => connection.channel())
+			.then(channel => channel.cancel(amqplibMock._helpers.consumerTag))
+			.then(_ => {
+				expect(amqplibMock._methods.channel.cancel).toHaveBeenCalledWith(amqplibMock._helpers.consumerTag);
+				expect(amqplibMock._methods.channel.cancel.calls.count()).toEqual(1);
 				done();
 			})
 			.catch(err => console.log(err));

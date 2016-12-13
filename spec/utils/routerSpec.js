@@ -193,6 +193,16 @@ describe('Utils', function() {
 			expect(router.get(service, "hola.hola")).not.toBe("valueG");
 		});
 
+		it('should not return the value after delete if the route is not valid', function () {
+			var service = "Service";
+
+			router.add(service, "hola.hola", "valueG");
+			expect(router.get(service, "hola.hola")).toBe("valueG");
+			
+			router.remove("no-service", "hola.hola", "valueG");
+			expect(router.get(service, "hola.hola")).toBe("valueG");
+		});
+
 		it('should return the last - non deleted - value if more than one pattern match the route', function () {
 			var service = "Service";
 

@@ -5,13 +5,16 @@
   "main": "lib/app.js",
   "watch": {
     "test": {
-      "patterns": ["lib", "spec"],
+      "patterns": [
+        "lib",
+        "spec"
+      ],
       "extensions": "js",
       "quiet": true
     }
   },
   "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/jasmine",
+    "test": "NODE_ENV=test ./node_modules/.bin/istanbul cover -x \"**/spec/**\" ./node_modules/.bin/jasmine",
     "start-dev": "NODE_ENV=development DEBUG=Omnea:* node ./lib/app.js",
     "start-prod": "NODE_ENV=production DEBUG=*:error node ./lib/app.js",
     "start-error-handler-dev": "NODE_ENV=development DEBUG=Omnea:* node ./lib/errorHandler/index.js",
@@ -20,15 +23,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/omnea/distributed-service-framework.git"
+    "url": "git+ssh://git@github.com/omnea/distributed-service-framework.git"
   },
   "privative": true,
   "author": "Omnea GmbH <david.montes@gmail.com>",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://gitlab.com/omnea/distributed-service-framework/issues"
+    "url": "https://github.com/omnea/distributed-service-framework/issues"
   },
-  "homepage": "https://gitlab.com/omnea/distributed-service-framework#README",
+  "homepage": "https://github.com/omnea/distributed-service-framework#README",
   "dependencies": {
     "amqplib": "^0.4.2",
     "debug": "^2.2.0",
@@ -36,6 +39,7 @@
     "node-uuid": "^1.4.7"
   },
   "devDependencies": {
+    "istanbul": "^0.4.5",
     "jasmine": "^2.5.2"
   }
 }

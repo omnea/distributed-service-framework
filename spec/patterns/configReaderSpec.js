@@ -7,12 +7,65 @@ describe('Patterns', function() {
 		var config;
 
 		beforeEach(function(done) {
+			di.injectDependency('config', {create: function () {return Promise.resolve(CONFIG);}});
+
 			di.get('patterns/configReader', CONFIG).then(instance => config = instance)
 			.then(done)
 			.catch(err => console.log(err));
 		});
 
 		describe('get', function() {
+			it('should use the production configuration if NODE_ENV is "production"', function(done) {
+				var oldEnv = process.env.NODE_ENV;
+
+				process.env.NODE_ENV = 'production';
+
+				var di = require(__dirname + '/../../lib/di/di').create(true);
+
+				di.get('patterns/configReader').then(instance => {
+					expect(instance.getEnvironment()).toBe('production');
+				})
+				.then(done)
+				.catch(e => console.log(e));
+
+				process.env.NODE_ENV = oldEnv;
+			});
+
+			it('the user config parameter should be optional', function() {
+				var di = require(__dirname + '/../../lib/di/di').create(true);
+
+				di.injectDependency('config', {create: function () {return Promise.resolve();}});
+
+				di.get('patterns/configReader').then(instance => {
+					done();
+				});
+			});
+
+			it('should throw an error if there is a variable not defined', function(done) {
+				var di = require(__dirname + '/../../lib/di/di').create(true);
+
+				di.injectDependency('config', {create: function () {return Promise.resolve({});}});
+
+				di.get('patterns/configReader').then(instance => {
+					expect(() => instance.getEnvironment()).toThrow();
+					expect(() => instance.getServiceName()).toThrow();
+					expect(() => instance.getQueueName()).toThrow();
+					expect(() => instance.getQueueOptions()).toThrow();
+					expect(() => instance.getQueueBindings()).toThrow();
+					expect(() => instance.getGlobalErrorQueueName()).toThrow();
+					expect(() => instance.getGlobalErrorExchangeName()).toThrow();
+					expect(() => instance.getGlobalErrorQueueOptions()).toThrow();
+					expect(() => instance.getExchangeName()).toThrow();
+					expect(() => instance.getExchangeOptions()).toThrow();
+					expect(() => instance.getExchangeType()).toThrow();
+					expect(() => instance.iterateQueues()).toThrow();
+					expect(() => instance.iterateExchanges()).toThrow();
+					expect(() => instance.getAMQPConfig()).toThrow();
+					expect(instance.getCloseTimeout()).toBe(0);
+				})
+				.then(done);
+			});
+
 			it('should return the correct configuration', function() {
 				expect(config.get('amqp.url')).toEqual(CONFIG.amqp.url);
 				expect(config.get('service.name')).toEqual(CONFIG.service.name);
@@ -32,6 +85,37 @@ describe('Patterns', function() {
 			it('should return the processed expression correctly', function() {
 				expect(config.get('service.queues.error.bindings')[0].exchange).toBe(EXCHANGE_NAME_FN());
 				expect(config.get('service.queues.consume.options.arguments.x-dead-letter-exchange')).toBe(EXCHANGE_NAME_FN());
+			});
+
+			describe('Should cancel the load if there is any incorrect expression', function() {
+				
+				it('', function(done) {
+					var di = require(__dirname + '/../../lib/di/di').create(true);
+
+					di.injectDependency('config', {create: function () {return Promise.resolve({
+						"non-existent-action": {"_process_": true, "action": "non-existent-action"},
+					});}});
+
+					di.get('patterns/configReader').catch(err => {
+						expect(err instanceof Error).toBe(true);
+						done();
+					})
+					.then(done);
+				});
+
+				it('', function(done) {
+					var di = require(__dirname + '/../../lib/di/di').create(true);
+
+					di.injectDependency('config', {create: function () {return Promise.resolve({
+						"no-existent-amqp": {"_process_": true, "action": "get-amqp-name", "type": "no-sense", "name": "delay"}
+					});}});
+
+					di.get('patterns/configReader').catch(err => {
+						expect(err instanceof Error).toBe(true);
+						done();
+					})
+					.then(done);
+				});
 			});
 
 			it('should return undefined for not existent data', function() {
@@ -132,6 +216,12 @@ describe('Patterns', function() {
 			});
 		});
 
+		describe('getGlobalErrorQueueOptions', function() {
+			it('should return the global error queue options', function() {
+				expect(config.getGlobalErrorQueueOptions()).toEqual(CONFIG.service.globalErrorQueue.options);
+			});
+		});
+
 		describe('getAMQPConfig', function() {
 			it('should return the correct amqp config', function() {
 				expect(config.getAMQPConfig()).toEqual(CONFIG.amqp);
@@ -160,6 +250,7 @@ var USER_CONFIG = {
 };
 
 var CONFIG = {
+	"environment": "production",
 	"amqp": {
 		"url": "88.99.15.151",
 		"port": 5672,
@@ -221,7 +312,7 @@ var CONFIG = {
 				},
 				"bindings": [
 					{
-						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "delay"},
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "queue", "name": "delay"},
 						"route": "_error"
 					}
 				]
@@ -241,18 +332,18 @@ var CONFIG = {
 					}
 				]
 			}
+		},
+		"globalErrorQueue": {
+			"name": "globalError",
+			"options": {
+				"exclusive": false,
+				"durable": true,
+				"autoDelete": false,
+				"arguments": {}
+			}
+		},
+		"globalErrorExchange": {
+			"name": "global-error"
 		}
 	},
-	"globalErrorQueue": {
-		"name": "globalError",
-		"options": {
-			"exclusive": false,
-			"durable": true,
-			"autoDelete": false,
-			"arguments": {}
-		}
-	},
-	"globalErrorExchange": {
-		"name": "global-error"
-	}
 };
