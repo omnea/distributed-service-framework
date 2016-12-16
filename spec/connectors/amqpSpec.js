@@ -140,7 +140,7 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
-		it('should reject the proise if the AMQP:bindQueue fail', function(done) {
+		it('should reject the promise if the AMQP:bindQueue fail', function(done) {
 			amqplibMock._methods.channel.bindQueue = () => Promise.reject('Bind failed');
 
 			spyOn(amqplibMock._methods.channel, 'bindQueue').and.callThrough();
@@ -158,7 +158,7 @@ describe('Connectors', function() {
 			});
 		});
 
-		it('should reject the proise if the AMQP:unbindQueue fail', function(done) {
+		it('should reject the promise if the AMQP:unbindQueue fail', function(done) {
 			amqplibMock._methods.channel.unbindQueue = () => Promise.reject();
 
 			spyOn(amqplibMock._methods.channel, 'unbindQueue').and.callThrough();

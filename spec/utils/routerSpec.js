@@ -193,7 +193,7 @@ describe('Utils', function() {
 			expect(router.get(service, "hola.hola")).not.toBe("valueG");
 		});
 
-		it('should not return the value after delete if the route is not valid', function () {
+		it('should return the correct value after executing remove in the same route but different service', function () {
 			var service = "Service";
 
 			router.add(service, "hola.hola", "valueG");
