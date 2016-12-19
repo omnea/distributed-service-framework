@@ -7,7 +7,7 @@ var config = require('./rejectMessageConfig.json');
 
 SF.start(config)
 .then(service => {
-    service.on('test-reject', 'hi', function (packet, emitter) {
+    service.on('test', 'hi', function (packet, emitter) {
         return Promise.reject(new Error('Message rejected by test'));
     });
 })
