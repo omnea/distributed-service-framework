@@ -62,7 +62,7 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"x-max-length": 10000,
+						"maxLength": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
 					}
 				}
@@ -74,7 +74,7 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"x-max-length": 20000,
+						"maxLength": 20000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
 						"x-message-ttl": 5000
 					}
@@ -93,7 +93,7 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"x-max-length": 10000,
+						"maxLength": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-global-error-exchange"}
 					}
 				},
