@@ -31,7 +31,7 @@ describe('Patterns', function() {
 				process.env.NODE_ENV = oldEnv;
 			});
 
-			it('the user config parameter should be optional', function() {
+			it('the user config parameter should be optional', function(done) {
 				var di = require(__dirname + '/../../lib/di/di').create(true);
 
 				di.injectDependency('config', {create: function () {return Promise.resolve();}});

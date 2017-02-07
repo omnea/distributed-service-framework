@@ -3,7 +3,7 @@ var ConfigReader = require('../../lib/patterns/configReader');
 var CONFIG = require('../../lib/config/development');
 var Logic = require('../../lib/errorHandler/logic');
 var LogicErrorMessages = require('../../lib/errorHandler/rejectionMessages');
-var MessageBuilder = require('../mocks/messageMock');
+var MessageMockBuilder = require('../mocks/messageMock');
 
 var REASON_REJECTED = 'rejected';
 var REASON_EXPIRED = 'expired';
@@ -16,7 +16,7 @@ describe('ErrorHandler', function() {
 		beforeEach(function(done) {
 			amqpMock = AmqpMock.mock();
 			config = new ConfigReader(CONFIG, {});
-			messageBuilder = new MessageBuilder(config);
+			messageBuilder = new MessageMockBuilder(config);
 			messageBuilder.route(DEFAULT_ROUTE);
 			amqpMock.create().then((amqp) => {
 				amqp.channel().then(_channel => {
@@ -24,6 +24,21 @@ describe('ErrorHandler', function() {
 					done();
 				});
 			});
+		});
+
+		it('should send to GEE a message that do not have the x-death header (makes no sense to be in this queue and to not be rejected)', function() {
+			var message = messageBuilder.deleteHeader('x-death').get();
+
+			spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+			Logic.onMessage(channel, config, message);
+
+			expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(
+				config.getGlobalErrorExchangeName(), 
+				DEFAULT_ROUTE, 
+				message.content, 
+				{headers: message.properties.headers}
+			);
 		});
 
 		it('should send to GEE a message that was rejected from NQ two times', function() {
@@ -66,6 +81,52 @@ describe('ErrorHandler', function() {
 				message.content, 
 				{headers: message.properties.headers}
 			);
+		});
+
+		it('should send to DE a message that was rejected with a falseable count', function() {
+			var message = messageBuilder.reject(
+				config.getExchangeName('service'), 
+				config.getQueueName('consume'), 
+				0, 
+				REASON_REJECTED
+			).get();
+
+			spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+			Logic.onMessage(channel, config, message);
+
+			expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(
+				config.getExchangeName('delay'), 
+				DEFAULT_ROUTE, 
+				message.content, 
+				{headers: message.properties.headers}
+			);
+		});
+
+		it('should send to GEE a message that was rejected and original route is not a string', function() {
+			var NO_STRING = 12345;
+
+			var message = messageBuilder
+			.route(NO_STRING)
+			.reject(
+				config.getExchangeName('service'), 
+				config.getQueueName('consume'), 
+				1, 
+				REASON_REJECTED
+			).get();
+
+			spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+			Logic.onMessage(channel, config, message);
+
+			expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(
+				config.getGlobalErrorExchangeName(),  
+				NO_STRING, 
+				message.content, 
+				{headers: message.properties.headers}
+			);
+
+			expect(message.properties.headers._globalErrorReason).toBe(LogicErrorMessages.REASON_NOT_FOUND_ORIGINAL_ROUTE);
 		});
 
 		it('should send to GEE a message that wasn\'t rejected (unroutable message)', function() {
