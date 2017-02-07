@@ -1,4 +1,4 @@
-module.exports = class MessageBuilder {
+module.exports = class MessageMockBuilder {
 	constructor(configReader) {
 		this.config = configReader;
 		this.message = emptyMessage(this.config.getExchangeName('service'));
@@ -9,7 +9,7 @@ module.exports = class MessageBuilder {
 	}
 
 	reject(exchange = 'test', queue = 'test.consume', count = 1, reason = 'rejected') {
-		this._addReject(rejectionCause(exchange, queue, count, reason));
+		this._addReject(rejectionCause(exchange, queue, count, reason, this.message.fields.routingKey));
 		return this;
 	}
 
@@ -25,6 +25,11 @@ module.exports = class MessageBuilder {
 
 	redelivered(name) {
 		this.message.fields.redelivered = name;
+		return this;
+	}
+
+	deleteHeader(header) {
+		delete this.message.properties.headers[header];
 		return this;
 	}
 
@@ -65,14 +70,14 @@ function emptyMessage(exchange) {
 	};
 }
 
-function rejectionCause(exchange, queue, count, reason) {
+function rejectionCause(exchange, queue, count, reason, route) {
 	return {
 		"count": count,
 		"exchange": exchange,
 		"queue": queue,
 		"reason": reason,
 		"routing-keys": [
-			"hi"
+			route
 		],
 		"time": {
 			"!": "timestamp",
