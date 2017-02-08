@@ -19,18 +19,7 @@
 				"options": {
 					"durable": true,
 					"internal": false,
-					"autoDelete": false,
-					"alternateExchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "no-route"}
-				}
-			},
-			"no-route": {
-				"name": "no-route",
-				"type": "fanout",
-				"options": {
-					"durable": true,
-					"internal": false,
-					"autoDelete": false,
-					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
+					"autoDelete": false
 				}
 			},
 			"error": {
@@ -100,10 +89,6 @@
 				"bindings": [
 					{
 						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"},
-						"route": ""
-					},
-					{
-						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "no-route"},
 						"route": ""
 					}
 				]

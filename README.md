@@ -1,104 +1,82 @@
+# Introduction
+
+This framework provices a convention and abstract the necessary practiques for using RabbitMQ safely and easily. It works like express and handles all the queues and exchange creation. More documentation about the internal of this framework can be found in the docs folder.
+
 # Dependencies
 
- - node > 6
+- latest node 6 LTS or newest LTS.
+
 
 # Installation
 
-- Install dependencies
-- `npm install` in the folder
+- `npm install @omneagmbh/distributed-service-framework --save` in the project that uses this framework
 
 # Testing
 
-- npm test
+- `npm test` inside the folder of the framework
 
-# Fast start
+# Using the framework
 
-This framework works defining subscriptions to services and allowing to emit messages in the process of the message.
+The framework is used like express with the difference that the user must connect with RabbitMQ before.
 
 ``` javascript
     var SF = require('@omneagmbh/distributed-service-framework');
 
-    SF.start({name: "test"})
+    SF.start() //if not JSON object config is provided, `.start()` will check for the file in the route in process.env.CONFIG_FILE. Is recomended to use the CONFIG_FILE environment variable
     .then(service => {
-        service.on('otherService', 'route.*.to.listen.#', (packet, emitter) => {
-            return new Promise((resolve, reject) => {
+
+        service.on('SERVICE_TO_LISTEN_EVENT', 'route.*.of.event.*.rabbitmq.patterns.#', (packet, emitter) =>{
+
+            return new Promise((resolve, reject) => { //The callbacks MUST return a promise
+
                 emitter.emit('route.to.emit.the.message', {data: "Hello :D"});
+
                 resolve(); //or reject(error)
             });
         });
     });
 ```
 
-The routes added with on MUST return a Promise, always. If not, the service will reject to continue and will close itself.
+After the connection the user declare the routes providing a callback. 
+
+The routes added with `on` **MUST** return a Promise, **always**. If not, the service will reject to continue and will close itself.
+
 If the promise is resolved, the messages emitted with the emitter, will be published in amqp and the message will be ack, if the promise is rejected, nothing will be published and the message will be nack.
 
-# Test cases
+# Launch
 
-## Test the error handler
-Run `CONFIG_FILE=../../test/rejectMessageConfig.json NODE_ENV=development DEBUG=* node ./lib/errorHandler/index.js` and `CONFIG_FILE=../test/rejectMessageConfig.json DEBUG=* node ./test/rejectMessage.js`
+There is only one environment variable: `CONFIG_FILE`. This is the route to the config file. The file will be merged with the predefined config file, is only required to provide the attributes that changes. 
 
-and then create a message in the exchange `test-reject` with route `hi`.
-The message should be rejected and handled by the error handler process.
+An example:
 
-# Notes:
-
-## The future structure of the messages. 
-
-```
-
+```json
 {
-    "credentials": {
-        "token": "sdfsdf",
-        "bearer": "sdfsdfsdf",
-        "user": {}
+    "environment": "development",
+    "amqp": {
+        "url": "rabbitmq_ip",
+        "port": 5672,
+        "user": "rabbitmq_user",
+        "pass": "rabbitmq_password"
     },
-    "data": {
-        "modelA": {
-            "__OmneaDataType": {
-                "type": "model",
-                "name": "User"
-            },
-            "data": {
-
-            }
-        },
-        "hola": {
-            "adios": 23,
-            "fecha": 123124314123
-        }
-    },
-    "metadata": {
-        "job": {
-            "id": "34242324",
-        },
-        "client": {
-            "ip": "213.21.54.1",
-            "user-agent": "Mozilla: Gecko like..."
-        },
-        "perf": {
-            "steps": [
-                {
-                    "time": 2123423,
-                    "server": "A1"
-                },{
-                    "time": 2123423,
-                    "server": "B2"
-                },{
-                    "time": 2123423,
-                    "server": "A2"
-                }
-            ]
-        }
+    "service": {
+        "name": "submitter",
     }
 }
 
-
 ```
 
+The rest of the parameters **SHOULD NOT** be changed unless there is a good reason.
 
-# TODO
+# Deloying
 
-- Finish tests
-- UPDATE documentation with second exchange
-- Check configuration of services (on board)
-- Add all the configuration of the docs in the config (maximun size of queues, etc)
+The program that uses this framework required two processes to be launch. One is the main process that uses the framework. The other is the error handler process.
+
+Both need a supervisor for handling errors and unexpected exits. The code is done assuming that there is a supervisor. In some operations, istead of reseting itself, the process it kill itself and assumes that the supervisor will launch it again.
+
+The main service is the one that the developer uses. 
+
+The other service is the error service and can be obtained with `require('@omneagmbh/distributed-service-framework/error')`. The process will take the environment variable `CONFIG_FILE` as the main process. Only doing the `require` launch the proces.
+
+
+
+
