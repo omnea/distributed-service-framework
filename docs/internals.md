@@ -335,46 +335,44 @@ The service can stop and resume their activity. We have a normal exit when the p
 
 1. Give a consistent hostname for the server (i.e. for the cluster rabbitmq-n)
     * set hostname
-sudo hostname rabbitmq-1
+`sudo hostname rabbitmq-1`
     * change it in next files
-- /etc/hostname/
-- /etc/hosts
+`/etc/hostname/`
+`/etc/hosts`
 2. Install rabbitmq ([debian docs](https://www.rabbitmq.com/install-debian.html))
     * add repo
-echo 'deb http://www.rabbitmq.com/debian/ testing main' |
-sudo tee /etc/apt/sources.list.d/rabbitmq.list
+`echo 'deb http://www.rabbitmq.com/debian/ testing main' | sudo tee /etc/apt/sources.list.d/rabbitmq.list`
     * add key
-wget -O- https://www.rabbitmq.com/rabbitmq-release-signing-key.asc |
-sudo apt-key add -
+`wget -O- https://www.rabbitmq.com/rabbitmq-release-signing-key.asc | sudo apt-key add -`
     * update pkg list
-sudo aptitude update
+`sudo aptitude update`
     * install rabbitmq-server
-sudo aptitude install rabbitmq-server
+`sudo aptitude install rabbitmq-server`
 3. Configure rabbitmq ([Production Checklist](https://www.rabbitmq.com/production-checklist.html))
-    * for example create custom config file (/etc/rabbitmq/rabbitmq.config) and configure RAM limits
-[{rabbit, [{vm_memory_high_watermark, 0.9}]}].
+    * for example create custom config file (`/etc/rabbitmq/rabbitmq.config`) and configure RAM limits
+`[{rabbit, [{vm_memory_high_watermark, 0.9}]}]`.
 4. Configure cluster ([Clustering Guide](http://www.rabbitmq.com/clustering.html))
     * general
-        * hostnames of all cluster members must be resolvable from all cluster nodes (through DNS records or Local host files (/etc/hosts))
-        * copy cookie (/var/lib/rabbitmq/.erlang.cookie) from master to another nodes (in order to communicate between them)
+        * hostnames of all cluster members must be resolvable from all cluster nodes (through DNS records or Local host files (`/etc/hosts`))
+        * copy cookie (`/var/lib/rabbitmq/.erlang.cookie`) from master to another nodes (in order to communicate between them)
     * for the master
         * create new user in rabbit:
-sudo rabbitmqctl add_user test test
-sudo rabbitmqctl set_user_tags test administrator
-sudo rabbitmqctl set_permissions -p / test ".*" ".*" ".*"
+`sudo rabbitmqctl add_user test test`
+`sudo rabbitmqctl set_user_tags test administrator`
+`sudo rabbitmqctl set_permissions -p / test ".*" ".*" ".*"`
         * enable management plugin (for the web interface, default on the port 15672)
-sudo rabbitmq-plugins enable rabbitmq_management
+`sudo rabbitmq-plugins enable rabbitmq_management`
         * call cluster status
-sudo rabbitmqctl cluster_status
+`sudo rabbitmqctl cluster_status`
         * describe HA queues ([Highly Available Queues](https://www.rabbitmq.com/ha.html)). For example:
-rabbitmqctl set_policy HA ".*" '{"ha-mode": "all"}'
+`rabbitmqctl set_policy HA ".*" '{"ha-mode": "all"}'`
     * for the other nodes:
         * enable management agent plugin
-sudo rabbitmq-plugins enable rabbitmq_management_agent
+`sudo rabbitmq-plugins enable rabbitmq_management_agent`
         * join to the cluster sudo rabbitmqctl cluster_status
-sudo rabbitmqctl stop_app
-sudo rabbitmqctl join_cluster rabbit@rabbitmq-1
-sudo rabbitmqctl start_app
+`sudo rabbitmqctl stop_app`
+`sudo rabbitmqctl join_cluster rabbit@rabbitmq-1`
+`sudo rabbitmqctl start_app`
         * where "rabbit@rabbitmq-1" is a “user@hostname” of existing member of cluster (for example master)
 5. Security
     * rabbitmq ports (5672 and 15672 on the server with web-interface) must be accessible between all nodes (including balancer);
@@ -386,15 +384,18 @@ sudo rabbitmqctl start_app
 1. Hostnames
     * set hostname
 sudo hostname rabbitmq-balancer
-    * change it in next files- /etc/hostname/
-- /etc/hosts
+    * change it in next files
+`/etc/hostname/`
+`/etc/hosts`
     * hostnames of all cluster members must be resolvable from balancer (or need refers by ip in config)
 2. Install HAProxy
     * Install stable version for Ubuntu ([or follow by official site](http://haproxy.debian.net/))
-sudo aptitude update
-sudo aptitude install haproxy
+`sudo aptitude update`
+`sudo aptitude install haproxy`
 3. Configure HAProxy
-    * Add to configuration file (/etc/haproxy/haproxy.cfg)
+    * Add to configuration file (`/etc/haproxy/haproxy.cfg`)
+
+```
 listen rabbitmq
     bind *:5672
     mode tcp
@@ -410,8 +411,11 @@ listen rabbitmq-management
     bind *:15672
     mode http
     server rabbitmq-1 rabbitmq-1:15672
-        * section "rabbitmq-management" refers to the node with web interface
+```
+    * section "rabbitmq-management" refers to the node with web interface
+
 4. Security
     * all proxying ports (5672 and 15672) must be opened (for external connects);
-    * port for the ssh must be opened if required.
+    * port for t
+    * he ssh must be opened if required.
 
