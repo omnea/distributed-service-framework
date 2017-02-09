@@ -281,5 +281,20 @@ describe('Connectors', function() {
 			.catch(err => console.log(err));
 		});
 
+		it('should call AMQP:publish when emit a message', function(done) {
+			closeFn = jasmine.createSpy('closeFn');
+
+			amqp.on('close', closeFn);
+
+			amqp.connect()
+			.then(_ => {
+				amqplibMock._helpers.closeConnection({});
+
+				expect(closeFn).toHaveBeenCalled();
+				done();
+			})
+			.catch(err => console.log(err));
+		});
+
 	});
 });

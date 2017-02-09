@@ -8,6 +8,8 @@ exports.mock = function (config) {
 	var id = uuid();
 	var consumeFunction = null;
 
+	var onCloseFn = null;
+
 	return {
 		_methods: _methods,
 		mockHelpers: mockHelpers,
@@ -19,7 +21,11 @@ exports.mock = function (config) {
 						throw new Error();
 					return Promise.resolve(channel);
 				},
-				close:  () => Promise.resolve(),
+				close:    () => Promise.resolve(),
+				on:       (name, fn) => {
+					if(name === 'close') 
+						onCloseFn = fn; 
+				}
 			};
 
 			var channel = {
@@ -55,6 +61,10 @@ exports.mock = function (config) {
 					_mock_uuid: id
 				});
 			});
+
+			mockHelpers.closeConnection = (err) => {
+				onCloseFn(err);
+			}; 
 			
 			return Promise.resolve(connection);
 		}

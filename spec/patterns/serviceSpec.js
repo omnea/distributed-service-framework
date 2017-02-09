@@ -384,6 +384,31 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
+			it('should register the event "close" after the connection', function(done) {
+				spyOn(amqpMock._methods.connection,'on').and.callThrough();
+
+				service.start()
+				.then(service => {
+					expect(amqpMock._methods.connection.on).toHaveBeenCalled();
+					done();
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should call stop after the connection close', function(done) {
+				spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+				service.start()
+				.then(service => {
+					amqpMock.mockHelpers.closeConnection({});
+					
+					setTimeout(() => {
+						expect(amqpMock._methods.connection.close).toHaveBeenCalled();
+						done();
+					});
+				})
+				.catch(err => console.log(err));
+			});
 		});
 
 		describe('Middlewares', function() {
