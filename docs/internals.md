@@ -11,6 +11,7 @@
     - [Error Queue](#error-queue)
     - [Global Error Queue](#global-error-queue)
     - [Normal Exchange](#normal-exchange)
+    - [Normal Exchange Republish](#normal-exchange-republish)
     - [Error Exchange](#error-exchange)
     - [Delay Exchange](#delay-exchange)
     - [Service Process](#service-process)
@@ -124,7 +125,12 @@ This queue is global and there is only one in all the rabbitmq cluster. If an er
 
 All services have an exchange with the name of the service. The events of the service are published in this exchange. If other service wants to listen from this service, it must subscribe in this exchange.
 
-Now every service have its own exchange. That means that we can’t have several services publishing in the same exchange. Maybe in the future this can be an option for moving from services to microservices, but not for now. 
+Now every service have its own exchange. That means that we can’t have several services publishing in the same exchange. Maybe in the future this can be an option for moving from services to microservices, but not for now.
+
+<a name="normal-exchange-republish"></a>
+## Normal Exchange Republish
+
+Delay queue death letter to this exchange. This exchange moves all messages to the normal queue, independent of if the message was in the normal queue or the own queue. That means that the routes between own queue and normal queue are shared, making impossible to add the same route to both queues. 
 
 <a name="error-exchange"></a>
 ## Error Exchange
@@ -209,7 +215,7 @@ The structure of the framework try to be as standalone and simple as possible (s
 
 The service API is very simple:
 
-```
+```javascript
 var error = require('debug')('Omnea:SF:error');
 
 var Service = require('@Omneagmbh/service-framework');
