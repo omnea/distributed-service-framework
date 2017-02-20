@@ -19,7 +19,8 @@
 				"options": {
 					"durable": true,
 					"internal": false,
-					"autoDelete": false
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
 				}
 			},
 			"error": {
@@ -41,6 +42,16 @@
 					"autoDelete": false,
 					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
 				}
+			},
+			"republish": {
+				"name": "republish",
+				"type": "fanout",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
+				}
 			}
 		},
 		"queues": {
@@ -50,6 +61,24 @@
 					"exclusive": false,
 					"durable": true,
 					"autoDelete": false,
+					"arguments": {
+						"x-max-length": 10000,
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
+					}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
+						"route": ""
+					}
+				]
+			},
+			"instance": {
+				"name": "",
+				"options": {
+					"exclusive": true,
+					"durable": true,
+					"autoDelete": true,
 					"arguments": {
 						"x-max-length": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
@@ -64,7 +93,7 @@
 					"autoDelete": false,
 					"arguments": {
 						"x-max-length": 20000,
-						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
 						"x-message-ttl": 5000
 					}
 				},
