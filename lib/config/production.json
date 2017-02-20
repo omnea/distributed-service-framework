@@ -1,5 +1,5 @@
 {
-	"environment": "development",
+	"environment": "production",
 	"amqp": {
 		"url": "88.99.15.151",
 		"port": 5672,
@@ -72,6 +72,18 @@
 						"route": ""
 					}
 				]
+			},
+			"instance": {
+				"name": "",
+				"options": {
+					"exclusive": true,
+					"durable": true,
+					"autoDelete": true,
+					"arguments": {
+						"x-max-length": 10000,
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
+					}
+				}
 			},
 			"delay": {
 				"name": "delay",

@@ -129,7 +129,7 @@ describe('Patterns', function() {
 				service.start()
 				.then(() => {
 					expect(amqpMock._methods.channel.consume).toHaveBeenCalled();
-					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(1);
+					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(2);
 					done();
 				})
 				.catch(err => console.log(err));
@@ -363,6 +363,26 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
+			it('should stop consuming messages after the off', function(done) {
+
+				var callback = jasmine.createSpy('callback');
+
+				service.start()
+				.then(service => {
+					service.instanceOn("Service", "route", callback);
+					service.instanceOff("Service", "route", callback);
+					
+					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+				})
+				.then(() => {
+					setTimeout(() => {
+						expect(callback).not.toHaveBeenCalled();
+						done();
+					}, 100);
+				})
+				.catch(err => console.log(err));
+			});
+
 			it('should stop and restart with success', function(done) {
 				spyOn(amqpMock._methods.channel,'consume').and.callThrough();
 				spyOn(amqpMock._methods.channel,'cancel').and.callThrough();
@@ -372,12 +392,12 @@ describe('Patterns', function() {
 				service.start()
 				.then(service => {
 					expect(amqpMock._methods.channel.consume).toHaveBeenCalled();
-					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(1);
+					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(2);
 
 					service.stop()
 					.then(() => {
 						expect(amqpMock._methods.channel.cancel).toHaveBeenCalled();
-						expect(amqpMock._methods.channel.cancel.calls.count()).toEqual(1);
+						expect(amqpMock._methods.channel.cancel.calls.count()).toEqual(2);
 					})
 					.then(done);
 				})
