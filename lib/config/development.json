@@ -41,6 +41,16 @@
 					"autoDelete": false,
 					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
 				}
+			},
+			"republish": {
+				"name": "republish",
+				"type": "fanout",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
+				}
 			}
 		},
 		"queues": {
@@ -54,7 +64,13 @@
 						"x-max-length": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
 					}
-				}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
+						"route": ""
+					}
+				]
 			},
 			"delay": {
 				"name": "delay",
@@ -64,7 +80,7 @@
 					"autoDelete": false,
 					"arguments": {
 						"x-max-length": 20000,
-						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
 						"x-message-ttl": 5000
 					}
 				},
