@@ -16,20 +16,19 @@
     - [Delay Exchange](#delay-exchange)
     - [Service Process](#service-process)
     - [Error Process](#error-process)
-    - [Processess](#processess)
         - [Message Consumption](#message-consumption)
-        - [Error Handling](#error-handling)
 - [Technical Structure](#technical-structure)
     - [API](#api)
-        - [ServiceClass.start\(\[config\]\)](#serviceclassstartconfig)
-        - [ServiceInstance.on\(serviceName, route, callback\)](#serviceinstanceonservicename-route-callback)
-        - [ServiceInstance.off\(serviceName, route, callback\)](#serviceinstanceoffservicename-route-callback)
-        - [ServiceInstance.middleware\(callback, \[isPostMiddleware\]\)](#serviceinstancemiddlewarecallback-ispostmiddleware)
+        - [`ServiceClass.start\(\[config\]\)`](#serviceclassstartconfig)
+        - [`ServiceInstance.on\(serviceName, route, callback\)`](#serviceinstanceonservicename-route-callback)
+        - [`ServiceInstance.off\(serviceName, route, callback\)`](#serviceinstanceoffservicename-route-callback)
+        - [`ServiceInstance.middleware\(callback, \[isPostMiddleware\]\)`](#serviceinstancemiddlewarecallback-ispostmiddleware)
+        - [`ServiceInstance.instanceOn\(serviceName, route, callback\)`](#serviceinstanceinstanceonservicename-route-callback)
+        - [`ServiceInstance.instanceOff\(serviceName, route, callback\)`](#serviceinstanceinstanceoffservicename-route-callback)
     - [Technical details](#technical-details)
         - [Routing messages internally](#routing-messages-internally)
         - [ACK on the correct moment](#ack-on-the-correct-moment)
         - [AMQP reconnection](#amqp-reconnection)
-        - [Division of channels](#division-of-channels)
         - [Pause, resume and exiting normally](#pause-resume-and-exiting-normally)
     - [Planning](#planning)
     - [Servers configuration](#servers-configuration)
@@ -147,63 +146,17 @@ This exchange receives the messages that need to be requeued from the **error pr
 
 This is the part that abstracts the developer from the complexities of the AMQP system.
 
-Here is where the queues, exchanges and **error handling** process are declared and launched. This Process consumes the messages in the **normal queue**. It contains the application itself.
+Here is where the queues and exchanges are declared and launched. This Process consumes the messages in the **normal queue** and the **own queue**. It contains the application itself.
 
 <a name="error-process"></a>
 ## Error Process
 
 This is a parallel process that and consumes the messages in the **error queue**. It decides when to requeue a message and when to send a message to the **global error queue**.
 
-<a name="processess"></a>
-## Processess
-
 <a name="message-consumption"></a>
 ### Message Consumption
 
 ![](./Service_framework.png)
-
-<a name="error-handling"></a>
-### Error Handling
-
-When a message is rejected from the user code process, the error handling process will take this message and decide if to send to the global error queue or request again in the normal queue. 
-
-There is three possible processes:
-
-* Success 
-    * Message arrives to normal queue 
-    * Consumed by  service
-    * The service acknowledge the message
-* Rejected-success
-    * Message arrives to normal queue 
-    * Consumed by service 
-    * Rejected by service (timeout/process crash/noack)
-    * Send to error queue
-    * Consumed by error handler 
-        * First time in error queue, the message must be requeued 
-    * Send to delay queue 
-    * Send to normal queue
-    * Consumed by service 
-    * Processed with success
-* Rejected-rejected
-    * Message arrives to normal queue 
-    * Consumed by service 
-    * Rejected by service (timeout/process crash/noack)
-    * Send to error queue
-    * Consumed by error handler 
-        * First time in error queue, the message must be requeued 
-    * Send to delay queue 
-    * Send to normal queue
-    * Consumed by service
-    * Rejected by service (timeout/process crash/noack)
-    * Send to error queue
-    * Consumed by error handler 
-        * Second time in the error queue, the message should be send to the global error queue. 
-    * Send to global error queue. 
-        * Message can't be processed
-
-The case rejected-rejected is an extension of the case rejected-success. 
-
-For the error handling process is very simple to know what to do with a message. If the message was more of one time in the error queue, it must be send to the global error queue.  In any other case it should be send to the delay queue. 
 
 <a name="technical-structure"></a>
 # Technical Structure
@@ -229,35 +182,53 @@ Service.start()
 ```
 
 <a name="serviceclassstartconfig"></a>
-### ServiceClass.start([config])
+### `ServiceClass.start([config])`
 
 This method creates the instance, connects with the server, declare all the queues, exchanges and bindings and gives the instance ready for use. It returns a promise that is satisfied with the instance and reject the promise if any error occurs.
 
 <a name="serviceinstanceonservicename-route-callback"></a>
-### ServiceInstance.on(serviceName, route, callback)
+### `ServiceInstance.on(serviceName, route, callback)`
 
 This method adds a subscription to one service on one route. 
 
-The routes accept patterns like "*.orange.*",  "*.*.rabbit" and "lazy.#".
+The routes accept patterns like` *.orange.*`,  `*.*.rabbit` and `lazy.#`.
 
-* * (star) can substitute for exactly one word.
-* # (hash) can substitute for zero or more words.
+* `*` (star) can substitute for exactly one word.
+* `#` (hash) can substitute for zero or more words.
 
-The route is created by adding a binding the the exchange with the name of the Service and with the route provided. All the exchanges are topic, that means that accepts patterns.
+The route is created by adding a binding the **normal queue** to the exchange and route that is provided. Remember that the **normal exchange** has the same name that the service, that means that doing domething like: 
+
+```javascript
+    service.on('submitter', 'submitted.success.#', callback);
+```
+
+Is binding the **normal queue** to the exchange `submitter` with the route `submitted.success.#`. Note: The **normal exchange** is always type topic. 
 
 When a consumed message satisfies the service and route, the callback is called. Only one callback will be called, no matter how many callbacks matches with the message service and route. (This can be changed in the future, but for maintain it simple, only one callback. The reason is to not fail to ensure that all callbacks finish before making the ack, with one callback is simple and less error prone)
 
 <a name="serviceinstanceoffservicename-route-callback"></a>
-### ServiceInstance.off(serviceName, route, callback)
+### `ServiceInstance.off(serviceName, route, callback)`
 
 Delete the binding of the queue and delete the callback from the internal states. If the queue still has messages with this service and route and any other route can process this message, the message is discarded and sended to the global error queue.
 
 <a name="serviceinstancemiddlewarecallback-ispostmiddleware"></a>
-### ServiceInstance.middleware(callback, [isPostMiddleware])
+### `ServiceInstance.middleware(callback, [isPostMiddleware])`
 
 Add a middleware that will be applied to all messages. The middleware must return a promise. 
 
 If the second argument is set, the middleware is configured for executing after the message process.
+
+<a name="serviceinstanceinstanceonservicename-route-callback"></a>
+### `ServiceInstance.instanceOn(serviceName, route, callback)`
+
+Works exactly like `on` method, but makes the binding in the **own queue** instead of the **normal queue**. 
+
+Note: Internally the routes are shared between `on` and `instanceOn`. That means that a route of one can match a message of the other. Take care of that.
+
+<a name="serviceinstanceinstanceoffservicename-route-callback"></a>
+### `ServiceInstance.instanceOff(serviceName, route, callback)`
+
+Works exactly like `off` method, but removes the binding in the **own queue** instead of the **normal queue**. 
 
 <a name="technical-details"></a>
 ## Technical details
@@ -267,13 +238,11 @@ If the second argument is set, the middleware is configured for executing after 
 
 The messages are always consumed from the **normal queue** and **own queue**. The bindings of this queue are changed dynamically for reflecting the subscriptions of the service. 
 
-When a message is received, the the exchange name and the route are readed and then is matched with **one** callback. This callback is the function that the developer provides on the **service.on()** method.
+When a message is received, the exchange name and the route are matched with **one** callback. This callback is the function that the developer provides on the **service.on()** method.
 
 For routing the pattern system of the RabbitMQ topic exchange are recreated on the code.
 
-* If a message has more than one callback:
-    * A warn is show and logged
-    * The first specified callback by the developer is chosen for processing the message.
+If a message has more than one callback, only the first specified callback by the developer is chosen for processing the message.
 
 <a name="ack-on-the-correct-moment"></a>
 ### ACK on the correct moment
@@ -287,21 +256,7 @@ The framework can use other system for checking if some action is performed afte
 <a name="amqp-reconnection"></a>
 ### AMQP reconnection
 
-If the connection is lost, a reconnection is done. This have several implications. Any message consumed and not rejected or acknowledged can’t be rejected or acknowledged anymore. For that reason the service will ignore any a satisfied promise belonging to a message of a previous connection.
-
-That means that when a message process is finish by the dev code, the service will check if is from the actual connection, if not, it will do nothing and will forget about it.
-
-This message will be consumed by the same or any other process on the service cluster.
-
-<a name="division-of-channels"></a>
-### Division of channels
-
-For recovering faster and avoiding error, the bindings declarations and the consumption will be done from different channels + another channel for the emission.
-
-* If a binding fails, and is in the initialization phase, the service launch will be cancelled and **exited normally** with an Error logged.
-* If a binding fails after the initialization phase, the service will continue, will rebuild the channel and continue normally. An error will be logged and the service.on() method returned promise will be rejected.
-* If any other kind of error happens that close the channel of consumption, the service will log the error and try to rebuild the channel. 
-* In case that any channel rebuild fail one time more, the service will exit normally and log the error again as **fail on recovery.**
+If the connection is lost, the process stop itself and do a normal exit expecting the supervisor to relaunch the process for doing a new connection. This is done because once a connection is lost, all processed messages must be reprocessed.
 
 <a name="pause-resume-and-exiting-normally"></a>
 ### Pause, resume and exiting normally
@@ -331,7 +286,8 @@ The service can stop and resume their activity. We have a normal exit when the p
 * V1.0
     * Error handling ✓
     * Queues creation (configuration of the service) ✓
-    * Reconnection/Recovery
+    * Reconnection/Recovery ✓
+    * RPC
 
 <a name="servers-configuration"></a>
 ## Servers configuration
