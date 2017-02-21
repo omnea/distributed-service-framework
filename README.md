@@ -71,12 +71,19 @@ The rest of the parameters **SHOULD NOT** be changed unless there is a good reas
 
 The program that uses this framework required two processes to be launch. One is the main process that uses the framework. The other is the error handler process.
 
-Both need a supervisor for handling errors and unexpected exits. The code is done assuming that there is a supervisor. In some operations, istead of reseting itself, the process it kill itself and assumes that the supervisor will launch it again.
+Both need a supervisor for handling errors and unexpected exits. The code is done assuming that there is a supervisor. In some operations, instead of reseting itself, the process it kill itself and assumes that the supervisor will launch it again.
 
 The main service is the one that the developer uses. 
 
-The other service is the error service and can be obtained with `require('@omneagmbh/distributed-service-framework/error')`. The process will take the environment variable `CONFIG_FILE` as the main process. Only doing the `require` launch the proces.
+The other service is the error service and can be obtained with `require('@omneagmbh/distributed-service-framework/error')`. The process will take the environment variable `CONFIG_FILE` as the main process. Only doing the `require` launch the process.
 
+One possible configuration for launching the error process is to create in the project that uses this framework a file with this content:
+
+```javascrip
+require('@omneagmbh/distributed-service-framework/error');
+```
+
+And launch the file with node and the `CONFIG_FILE` environment variable.
 
 
 
