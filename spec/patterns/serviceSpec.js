@@ -429,6 +429,33 @@ describe('Patterns', function() {
 				})
 				.catch(err => console.log(err));
 			});
+
+			it('should emit the message when service emit is called', function (done) {
+				var serviceName = "Service";
+				var route = "Route";
+				var messageToEmit = {route: Math.random() + '', content: Math.random() + ''};
+				var message = "HOLA :DDDDD";
+
+				var processesContents = [
+					new Buffer.from(String(messageToEmit.content))
+				];
+
+				spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+				service.start()
+				.then(service => {
+
+					service.emit(messageToEmit.route, messageToEmit.content)
+					.then(() => {
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit.route, processesContents[0]);
+						done();
+					});
+
+					return Promise.resolve();
+				})
+				.catch(err => console.log(err));
+			});
 		});
 
 		describe('Middlewares', function() {
