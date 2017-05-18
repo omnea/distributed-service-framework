@@ -1,6 +1,11 @@
 exports.mock = function () {
 	var _methods = {};
-	var _helpers = {consumerTag: "3408c524309c57n2105"};
+	var _helpers = {
+		consumerTag: "3408c524309c57n2105",
+		closeConnection: (err) => closeFn(err)
+	};
+
+	var closeFn = null;
 	
 	return {
 		_methods: _methods,
@@ -12,7 +17,8 @@ exports.mock = function () {
 
 			var connection = {
 				createChannel:  () => Promise.resolve(channel),
-				close:          () => Promise.resolve()
+				close:          () => Promise.resolve(),
+				on:             (name, fn) => { if(name === 'close') closeFn = fn; }
 			};
 
 			var channel = {

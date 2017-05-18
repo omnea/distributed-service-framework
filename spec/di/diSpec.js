@@ -42,6 +42,7 @@ describe('Depedency injector', function() {
 		di.injectDependency('hello/world', {create: function (di, a1) {
 			expect(a1).toBe(argument);
 			done();
+			return Promise.resolve();
 		}}, argument);
 
 		di.get('hello/world');

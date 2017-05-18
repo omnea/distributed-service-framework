@@ -1,6 +1,6 @@
 {
   "name": "@omneagmbh/distributed-service-framework",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Basic framework for developing distributed services. It handles messages, acknowledgment and errors",
   "main": "lib/app.js",
   "watch": {

@@ -20,16 +20,6 @@
 					"durable": true,
 					"internal": false,
 					"autoDelete": false,
-					"alternateExchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "no-route"}
-				}
-			},
-			"no-route": {
-				"name": "no-route",
-				"type": "fanout",
-				"options": {
-					"durable": true,
-					"internal": false,
-					"autoDelete": false,
 					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
 				}
 			},
@@ -45,6 +35,16 @@
 			},
 			"delay": {
 				"name": "delay",
+				"type": "fanout",
+				"options": {
+					"durable": true,
+					"internal": false,
+					"autoDelete": false,
+					"alternateExchange": {"_process_": true, "action": "get-global-error-exchange"}
+				}
+			},
+			"republish": {
+				"name": "republish",
 				"type": "fanout",
 				"options": {
 					"durable": true,
@@ -62,7 +62,25 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"maxLength": 10000,
+						"x-max-length": 10000,
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
+					}
+				},
+				"bindings": [
+					{
+						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
+						"route": ""
+					}
+				]
+			},
+			"instance": {
+				"name": "",
+				"options": {
+					"exclusive": true,
+					"durable": true,
+					"autoDelete": true,
+					"arguments": {
+						"x-max-length": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"}
 					}
 				}
@@ -74,8 +92,8 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"maxLength": 20000,
-						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "service"},
+						"x-max-length": 20000,
+						"x-dead-letter-exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "republish"},
 						"x-message-ttl": 5000
 					}
 				},
@@ -93,17 +111,13 @@
 					"durable": true,
 					"autoDelete": false,
 					"arguments": {
-						"maxLength": 10000,
+						"x-max-length": 10000,
 						"x-dead-letter-exchange": {"_process_": true, "action": "get-global-error-exchange"}
 					}
 				},
 				"bindings": [
 					{
 						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "error"},
-						"route": ""
-					},
-					{
-						"exchange": {"_process_": true, "action": "get-amqp-name", "type": "exchange", "name": "no-route"},
 						"route": ""
 					}
 				]

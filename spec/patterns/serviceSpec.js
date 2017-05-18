@@ -129,7 +129,7 @@ describe('Patterns', function() {
 				service.start()
 				.then(() => {
 					expect(amqpMock._methods.channel.consume).toHaveBeenCalled();
-					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(1);
+					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(2);
 					done();
 				})
 				.catch(err => console.log(err));
@@ -363,6 +363,26 @@ describe('Patterns', function() {
 				.catch(err => console.log(err));
 			});
 
+			it('should stop consuming messages after the off', function(done) {
+
+				var callback = jasmine.createSpy('callback');
+
+				service.start()
+				.then(service => {
+					service.instanceOn("Service", "route", callback);
+					service.instanceOff("Service", "route", callback);
+					
+					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+				})
+				.then(() => {
+					setTimeout(() => {
+						expect(callback).not.toHaveBeenCalled();
+						done();
+					}, 100);
+				})
+				.catch(err => console.log(err));
+			});
+
 			it('should stop and restart with success', function(done) {
 				spyOn(amqpMock._methods.channel,'consume').and.callThrough();
 				spyOn(amqpMock._methods.channel,'cancel').and.callThrough();
@@ -372,18 +392,70 @@ describe('Patterns', function() {
 				service.start()
 				.then(service => {
 					expect(amqpMock._methods.channel.consume).toHaveBeenCalled();
-					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(1);
+					expect(amqpMock._methods.channel.consume.calls.count()).toEqual(2);
 
 					service.stop()
 					.then(() => {
 						expect(amqpMock._methods.channel.cancel).toHaveBeenCalled();
-						expect(amqpMock._methods.channel.cancel.calls.count()).toEqual(1);
+						expect(amqpMock._methods.channel.cancel.calls.count()).toEqual(2);
 					})
 					.then(done);
 				})
 				.catch(err => console.log(err));
 			});
 
+			it('should register the event "close" after the connection', function(done) {
+				spyOn(amqpMock._methods.connection,'on').and.callThrough();
+
+				service.start()
+				.then(service => {
+					expect(amqpMock._methods.connection.on).toHaveBeenCalled();
+					done();
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should call stop after the connection close', function(done) {
+				spyOn(amqpMock._methods.connection,'close').and.callThrough();
+
+				service.start()
+				.then(service => {
+					amqpMock.mockHelpers.closeConnection({});
+					
+					setTimeout(() => {
+						expect(amqpMock._methods.connection.close).toHaveBeenCalled();
+						done();
+					});
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should emit the message when service emit is called', function (done) {
+				var serviceName = "Service";
+				var route = "Route";
+				var messageToEmit = {route: Math.random() + '', content: Math.random() + ''};
+				var message = "HOLA :DDDDD";
+
+				var processesContents = [
+					new Buffer.from(String(messageToEmit.content))
+				];
+
+				spyOn(amqpMock._methods.channel,'emit').and.callThrough();
+
+				service.start()
+				.then(service => {
+
+					service.emit(messageToEmit.route, messageToEmit.content)
+					.then(() => {
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalled();
+						expect(amqpMock._methods.channel.emit).toHaveBeenCalledWith(SERVICE_CONFIG.name, messageToEmit.route, processesContents[0]);
+						done();
+					});
+
+					return Promise.resolve();
+				})
+				.catch(err => console.log(err));
+			});
 		});
 
 		describe('Middlewares', function() {
