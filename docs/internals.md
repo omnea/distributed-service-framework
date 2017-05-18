@@ -113,7 +113,7 @@ This queue receives all the rejections, the timeouts and max capacity dead lette
 <a name="global-error-queue"></a>
 ## Global Error Queue
 
-This queue is global and there is only one in all the rabbitmq cluster. If an error is retried several times or the **error queue **reach their maximum capacity the messages are sended to this queue for store and analyzing. 
+This queue is global and there is only one in all the rabbitmq cluster. If an error is retried several times or the **error queue **reach their maximum capacity the messages are sent to this queue for store and analyzing. 
 
 * Durable: true
 * Exclusive: false
@@ -196,7 +196,7 @@ The routes accept patterns like` *.orange.*`,  `*.*.rabbit` and `lazy.#`.
 * `*` (star) can substitute for exactly one word.
 * `#` (hash) can substitute for zero or more words.
 
-The route is created by adding a binding the **normal queue** to the exchange and route that is provided. Remember that the **normal exchange** has the same name that the service, that means that doing domething like: 
+The route is created by adding a binding the **normal queue** to the exchange and route that is provided. Remember that the **normal exchange** has the same name that the service, that means that doing something like: 
 
 ```javascript
     service.on('submitter', 'submitted.success.#', callback);
@@ -209,7 +209,7 @@ When a consumed message satisfies the service and route, the callback is called.
 <a name="serviceinstanceoffservicename-route-callback"></a>
 ### `ServiceInstance.off(serviceName, route, callback)`
 
-Delete the binding of the queue and delete the callback from the internal states. If the queue still has messages with this service and route and any other route can process this message, the message is discarded and sended to the global error queue.
+Delete the binding of the queue and delete the callback from the internal states. If the queue still has messages with this service and route and any other route can process this message, the message is discarded and sent to the global error queue.
 
 <a name="serviceinstancemiddlewarecallback-ispostmiddleware"></a>
 ### `ServiceInstance.middleware(callback, [isPostMiddleware])`
