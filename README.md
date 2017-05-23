@@ -1,6 +1,6 @@
 # Introduction
 
-This framework provices a convention and abstract the necessary practiques for using RabbitMQ safely and easily. It works like express and handles all the queues and exchange creation. More documentation about the internal of this framework can be found in the docs folder.
+This framework provides a convention and abstract the necessary practices for using RabbitMQ safely and easily. It works like express and handles all the queues and exchange creation. More documentation about the internal of this framework can be found in the docs folder.
 
 # Dependencies
 
@@ -67,7 +67,7 @@ An example:
 
 The rest of the parameters **SHOULD NOT** be changed unless there is a good reason.
 
-# Deloying
+# Deploying
 
 The program that uses this framework required two processes to be launch. One is the main process that uses the framework. The other is the error handler process.
 
