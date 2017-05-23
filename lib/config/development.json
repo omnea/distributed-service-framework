@@ -6,7 +6,8 @@
 		"user": "test",
 		"pass": "test",
 		"heartbeat": 20,
-		"channelMax": 3
+		"channelMax": 3,
+		"qos": 10
 	},
 	"service": {
 		"name": "NO_NAMED_SERVICE",

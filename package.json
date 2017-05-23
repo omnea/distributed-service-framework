@@ -33,10 +33,10 @@
   },
   "homepage": "https://github.com/omnea/distributed-service-framework#README",
   "dependencies": {
-    "amqplib": "^0.4.2",
-    "debug": "^2.2.0",
+    "amqplib": "^0.5.1",
+    "debug": "^2.6.8",
     "deepmerge": "^1.3.0",
-    "node-uuid": "^1.4.7"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
