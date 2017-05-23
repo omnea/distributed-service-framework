@@ -456,6 +456,56 @@ describe('Patterns', function() {
 				})
 				.catch(err => console.log(err));
 			});
+
+			it('should stop consuming messages after the once is executed', function(done) {
+
+				var callback = jasmine.createSpy('callback').and.callFake(() => Promise.resolve());
+
+				service.start()
+				.then(service => {
+					service.once("Service", "route", callback);
+					
+					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+
+					setTimeout(() => {
+						expect(callback.calls.count()).toEqual(1);
+
+						amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+
+						setTimeout(() => {
+							expect(callback.calls.count()).toEqual(1);
+							done();
+						}, 0);
+					}, 0);
+
+				})
+				.catch(err => console.log(err));
+			});
+
+			it('should stop consuming messages after the instanceOnce is executed', function(done) {
+
+				var callback = jasmine.createSpy('callback').and.callFake(() => Promise.resolve());
+
+				service.start()
+				.then(service => {
+					service.instanceOnce("Service", "route", callback);
+					
+					amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+
+					setTimeout(() => {
+						expect(callback.calls.count()).toEqual(1);
+
+						amqpMock.mockHelpers.publish("Service", "route", "HOLA :DDDDDDD");
+
+						setTimeout(() => {
+							expect(callback.calls.count()).toEqual(1);
+							done();
+						}, 0);
+					}, 0);
+
+				})
+				.catch(err => console.log(err));
+			});
 		});
 
 		describe('Middlewares', function() {
