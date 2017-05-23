@@ -31,6 +31,7 @@ exports.mock = function () {
 				close:          () => Promise.resolve(),
 				ack:            () => Promise.resolve(),
 				nack:           () => Promise.resolve(),
+				prefetch:       () => Promise.resolve(),
 				publish:        () => Promise.resolve(),
 				consume:        () => Promise.resolve({consumerTag: _helpers.consumerTag}),
 				cancel:         () => Promise.resolve()

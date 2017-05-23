@@ -1,4 +1,4 @@
-var uuid = require('node-uuid').v4;
+var uuid = require('uuid/v4');
 
 exports.mock = function (config) {
 	var _methods = {};
